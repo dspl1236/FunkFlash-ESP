@@ -10,50 +10,64 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            output: FunkFlash-ESP-Windows.exe
-            pyinstaller_args: --onefile --windowed --name FunkFlash-ESP
-          - os: macos-latest
-            output: FunkFlash-ESP-macOS
-            pyinstaller_args: --onefile --windowed --name FunkFlash-ESP
-          - os: ubuntu-latest
-            output: FunkFlash-ESP-Linux
-            pyinstaller_args: --onefile --name FunkFlash-ESP
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
         run: |
-          pip install pyinstaller esptool pyserial requests nvs-flash-gen
+          pip install pyinstaller esptool pyserial requests
 
       - name: Download latest firmware
         run: python flasher/fetch_firmware.py
 
-      - name: Build with PyInstaller
+      - name: Build EXE with PyInstaller
         run: |
           cd flasher
-          pyinstaller ${{ matrix.pyinstaller_args }} main.py
+          pyinstaller ^
+            --onefile ^
+            --windowed ^
+            --name FunkFlash-ESP ^
+            --hidden-import esptool ^
+            --hidden-import esptool.targets ^
+            --hidden-import esptool.targets.esp32 ^
+            --hidden-import esptool.loader ^
+            --hidden-import esptool.cmds ^
+            --hidden-import serial ^
+            --hidden-import serial.tools ^
+            --hidden-import serial.tools.list_ports ^
+            --hidden-import serial.tools.list_ports_windows ^
+            --collect-all esptool ^
+            --add-data "firmware;firmware" ^
+            main.py
+        shell: cmd
+
+      - name: List build output
+        run: dir flasher\dist\
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.output }}
-          path: flasher/dist/
+          name: FunkFlash-ESP-Windows
+          path: flasher/dist/FunkFlash-ESP.exe
+          retention-days: 30
 
       - name: Attach to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: flasher/dist/*
+          files: flasher/dist/FunkFlash-ESP.exe
+
+  # macOS and Linux builds — added once Windows is confirmed working
+  # build-macos:
+  #   ...
+  # build-linux:
+  #   ...
