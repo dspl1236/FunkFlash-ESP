@@ -22,29 +22,38 @@ else:
 FIRMWARE_DIR = BASE_DIR / "firmware"
 
 FLASH_TARGETS = {
-    "BLE":     {"label": "BLE (mobile / Bluetooth)",
-                "desc":  "Pairs with phone via Bluetooth. Use with simos-suite and VAG-CP PWA.",
-                "bins":  [
-                    (0x1000,  "bootloader.bin"),
-                    (0x8000,  "partition-table.bin"),
-                    (0x10000, "funkbridge-ble.bin"),
-                ]},
-    "WiFi AP":  {"label": "WiFi AP (instant bench — captive portal)",
-                 "desc":  "Creates FunkBridge network. Any device connects and browser opens automatically at http://192.168.4.1",
-                 "bins":  [
-                    (0x1000,  "bootloader.bin"),
-                    (0x8000,  "partition-table.bin"),
-                    (0x10000, "funkbridge-ap.bin"),
-                    (0xD0000, "funkbridge-spiffs.bin"),
-                 ]},
-    "WiFi STA": {"label": "WiFi Station (join your network)",
-                 "desc":  "Joins your existing WiFi. Access at http://funkbridge.local from any device on the network.",
-                 "bins":  [
-                    (0x1000,  "bootloader.bin"),
-                    (0x8000,  "partition-table.bin"),
-                    (0x10000, "funkbridge-sta.bin"),
-                    (0xD0000, "funkbridge-spiffs.bin"),
-                 ]},
+    "BLE": {
+        "label": "BLE (mobile / Bluetooth)",
+        "desc":  "Pairs with phone via Bluetooth. Works with simos-suite and VAG-CP PWA.",
+        "bins":  [
+            (0x1000,   "bootloader.bin"),
+            (0x8000,   "partition-table.bin"),
+            (0x10000,  "funkbridge-ble.bin"),
+        ],
+        "spiffs": None,
+    },
+    "WiFi AP": {
+        "label": "WiFi AP (instant bench — captive portal)",
+        "desc":  "Creates 'FunkBridge' WiFi (192.168.4.0/28). Browser opens automatically. "
+                 "Access at http://192.168.4.1 or http://funkbridge.local",
+        "bins":  [
+            (0x1000,   "bootloader.bin"),
+            (0x8000,   "partition-table.bin"),
+            (0x10000,  "funkbridge-ap.bin"),
+        ],
+        "spiffs": (0xD0000, "funkbridge-spiffs.bin"),
+    },
+    "WiFi STA": {
+        "label": "WiFi Station (join your network)",
+        "desc":  "Joins your existing WiFi. Access from any device at http://funkbridge.local. "
+                 "Falls back to AP mode if network unavailable.",
+        "bins":  [
+            (0x1000,   "bootloader.bin"),
+            (0x8000,   "partition-table.bin"),
+            (0x10000,  "funkbridge-sta.bin"),
+        ],
+        "spiffs": (0xD0000, "funkbridge-spiffs.bin"),
+    },
 }
 
 PAL = {
@@ -264,9 +273,13 @@ class FunkFlashApp(tk.Tk):
         mode = self._mode_var.get()
         targets = FLASH_TARGETS[mode]["bins"]
 
+        # Build full flash list — add SPIFFS for WiFi modes
+        spiffs = FLASH_TARGETS[mode].get("spiffs")
+        all_bins = list(targets) + ([spiffs] if spiffs else [])
+
         # Verify all bin files exist
         missing = []
-        for _, fname in targets:
+        for _, fname in all_bins:
             p = FIRMWARE_DIR / fname
             if not p.exists() or p.read_bytes() == b"PLACEHOLDER":
                 missing.append(fname)
@@ -275,10 +288,15 @@ class FunkFlashApp(tk.Tk):
             self._log_msg("Download a release build or run fetch_firmware.py", "warn")
             return
 
+        # Station mode requires SSID
+        if mode == "WiFi STA" and not self._ssid_var.get().strip():
+            self._log_msg("WiFi Station requires an SSID — enter credentials above", "err")
+            return
+
         self._flash_btn.config(state="disabled")
         self._progress.set(0)
         threading.Thread(target=self._flash_thread,
-                         args=(port, mode, targets), daemon=True).start()
+                         args=(port, mode, all_bins), daemon=True).start()
 
     def _flash_thread(self, port, mode, targets):
         try:
@@ -368,6 +386,9 @@ class FunkFlashApp(tk.Tk):
             self.after(0, self._progress.set, 100)
             self.after(0, self._set_status, f"✓ Flashed {mode} firmware successfully!", "green")
             self.after(0, self._log_msg, "Flash complete!", "ok")
+            spiffs = FLASH_TARGETS.get(mode, {}).get("spiffs")
+            if spiffs:
+                self.after(0, self._log_msg, f"SPIFFS web app flashed at 0x{spiffs[0]:X}", "ok")
             if mode == "WiFi AP":
                 self.after(0, self._log_msg,
                     "Connect to 'FunkBridge' WiFi → browser opens automatically", "ok")
