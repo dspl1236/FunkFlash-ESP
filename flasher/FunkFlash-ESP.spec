@@ -1,4 +1,7 @@
 # FunkFlash-ESP.spec
+# PyInstaller spec for Windows EXE build
+# Explicit hidden imports for esptool and pyserial
+
 import sys
 from pathlib import Path
 
@@ -7,7 +10,6 @@ block_cipher = None
 firmware_dir = Path('firmware')
 firmware_data = [(str(f), 'firmware') for f in firmware_dir.glob('*.bin')]
 firmware_data += [(str(f), 'firmware') for f in firmware_dir.glob('*.txt')]
-firmware_data += [(str(f), 'firmware') for f in firmware_dir.glob('*.txt')]
 
 a = Analysis(
     ['main.py'],
@@ -15,13 +17,31 @@ a = Analysis(
     binaries=[],
     datas=firmware_data,
     hiddenimports=[
+        # esptool and all chip targets
         'esptool',
         'esptool.targets',
+        'esptool.targets.esp32',
+        'esptool.targets.esp32s2',
+        'esptool.targets.esp32s3',
+        'esptool.targets.esp32c3',
         'esptool.loader',
+        'esptool.cmds',
+        'esptool.bin_image',
+        'esptool.config',
+        'esptool.util',
+        'esptool.uf2_writer',
+        'esptool.reset',
+        # pyserial
         'serial',
         'serial.tools',
         'serial.tools.list_ports',
-        'nvs_flash_gen',
+        'serial.tools.list_ports_windows',
+        'serial.tools.list_ports_posix',
+        'serial.tools.list_ports_osx',
+        # tkinter (usually auto-detected but explicit for CI)
+        'tkinter',
+        'tkinter.ttk',
+        'tkinter.font',
     ],
     hookspath=[],
     hooksconfig={},
@@ -32,6 +52,10 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False,
 )
+
+# Collect all esptool data files (chip stubs etc)
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+a.datas += collect_data_files('esptool')
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
@@ -44,7 +68,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=False,           # no console window on Windows
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,
