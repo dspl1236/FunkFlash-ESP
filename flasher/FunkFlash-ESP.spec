@@ -7,6 +7,7 @@ block_cipher = None
 firmware_dir = Path('firmware')
 firmware_data = [(str(f), 'firmware') for f in firmware_dir.glob('*.bin')]
 firmware_data += [(str(f), 'firmware') for f in firmware_dir.glob('*.txt')]
+firmware_data += [(str(f), 'firmware') for f in firmware_dir.glob('*.txt')]
 
 a = Analysis(
     ['main.py'],
