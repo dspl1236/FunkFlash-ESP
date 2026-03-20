@@ -1,3 +1,4 @@
 esptool>=4.7
 pyserial>=3.5
 requests>=2.28
+nvs-flash-gen>=0.1.3
