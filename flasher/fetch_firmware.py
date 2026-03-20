@@ -31,6 +31,7 @@ wanted = [
     "funkbridge-ble.bin",
     "funkbridge-ap.bin",
     "funkbridge-sta.bin",
+    "funkbridge-spiffs.bin",  # Web app SPIFFS image — required for WiFi modes
     "bootloader.bin",
     "partition-table.bin",
 ]
