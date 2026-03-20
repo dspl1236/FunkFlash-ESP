@@ -1,0 +1,59 @@
+name: Build FunkFlash-ESP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'flasher/**'
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            output: FunkFlash-ESP-Windows.exe
+            pyinstaller_args: --onefile --windowed --name FunkFlash-ESP
+          - os: macos-latest
+            output: FunkFlash-ESP-macOS
+            pyinstaller_args: --onefile --windowed --name FunkFlash-ESP
+          - os: ubuntu-latest
+            output: FunkFlash-ESP-Linux
+            pyinstaller_args: --onefile --name FunkFlash-ESP
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller esptool pyserial requests
+
+      - name: Download latest firmware
+        run: python flasher/fetch_firmware.py
+
+      - name: Build with PyInstaller
+        run: |
+          cd flasher
+          pyinstaller ${{ matrix.pyinstaller_args }} main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: flasher/dist/
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: flasher/dist/*
