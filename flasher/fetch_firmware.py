@@ -16,8 +16,8 @@ if r.status_code == 404:
     print("No release yet — using placeholder binaries")
     # Create empty placeholder files so PyInstaller doesn't fail
     for name in ["funkbridge-ble.bin", "funkbridge-ap.bin",
-                 "funkbridge-sta.bin", "bootloader.bin",
-                 "partition-table.bin"]:
+                 "funkbridge-sta.bin", "funkbridge-spiffs.bin",
+                 "bootloader.bin", "partition-table.bin"]:
         p = OUT_DIR / name
         if not p.exists():
             p.write_bytes(b"PLACEHOLDER")
