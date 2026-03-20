@@ -30,18 +30,20 @@ FLASH_TARGETS = {
                     (0x10000, "funkbridge-ble.bin"),
                 ]},
     "WiFi AP":  {"label": "WiFi AP (instant bench — captive portal)",
-                 "desc":  "Creates FunkBridge network. Any device connects and browser opens automatically.",
+                 "desc":  "Creates FunkBridge network. Any device connects and browser opens automatically at http://192.168.4.1",
                  "bins":  [
                     (0x1000,  "bootloader.bin"),
                     (0x8000,  "partition-table.bin"),
                     (0x10000, "funkbridge-ap.bin"),
+                    (0xD0000, "funkbridge-spiffs.bin"),
                  ]},
     "WiFi STA": {"label": "WiFi Station (join your network)",
-                 "desc":  "Joins your existing WiFi. Access at http://funkbridge.local from any device.",
+                 "desc":  "Joins your existing WiFi. Access at http://funkbridge.local from any device on the network.",
                  "bins":  [
                     (0x1000,  "bootloader.bin"),
                     (0x8000,  "partition-table.bin"),
                     (0x10000, "funkbridge-sta.bin"),
+                    (0xD0000, "funkbridge-spiffs.bin"),
                  ]},
 }
 
@@ -297,7 +299,36 @@ class FunkFlashApp(tk.Tk):
         for addr, fname in targets:
             args += [str(hex(addr)), str(FIRMWARE_DIR / fname)]
 
-        self.after(0, self._log_msg, f"esptool.py {" ".join(args[:6])}...")
+        # For WiFi Station mode: write credentials into NVS partition
+        if mode == "WiFi STA":
+            ssid = self._ssid_var.get().strip()
+            pwd  = self._pass_var.get().strip()
+            if ssid:
+                self.after(0, self._log_msg, f"WiFi credentials: SSID={ssid}")
+                # Write NVS CSV for credentials
+                import tempfile, csv as csv_mod, os
+                nvs_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+                nvs_csv.write("key,type,encoding,value\n")
+                nvs_csv.write(f"wifi_mode,data,u8,2\n")          # WIFI_MODE_STATION=2
+                nvs_csv.write(f"wifi_ssid,data,string,{ssid}\n")
+                nvs_csv.write(f"wifi_pass,data,string,{pwd}\n")
+                nvs_csv.close()
+                # Generate NVS binary using nvs_flash_gen
+                nvs_bin = nvs_csv.name.replace('.csv', '.bin')
+                try:
+                    import nvs_flash_gen
+                    nvs_flash_gen.main(['generate', nvs_csv.name, nvs_bin, '0x6000'])
+                    # Add NVS partition to flash args
+                    args += [str(hex(0x9000)), nvs_bin]
+                    self.after(0, self._log_msg, "NVS credentials prepared", "ok")
+                except Exception as e:
+                    self.after(0, self._log_msg, f"NVS gen failed: {e} — credentials set on first boot via portal", "warn")
+                finally:
+                    os.unlink(nvs_csv.name)
+            else:
+                self.after(0, self._log_msg, "No SSID entered — device will start in AP mode first", "warn")
+
+        self.after(0, self._log_msg, f"esptool.py {' '.join(args[:6])}...")
 
         # Custom progress callback
         total_steps = len(targets)
