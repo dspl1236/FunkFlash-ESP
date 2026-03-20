@@ -1,6 +1,4 @@
 # FunkFlash-ESP.spec
-# PyInstaller spec — bundles firmware .bin files and esptool
-
 import sys
 from pathlib import Path
 
@@ -22,6 +20,7 @@ a = Analysis(
         'serial',
         'serial.tools',
         'serial.tools.list_ports',
+        'nvs_flash_gen',
     ],
     hookspath=[],
     hooksconfig={},
