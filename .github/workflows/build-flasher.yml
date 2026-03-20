@@ -13,7 +13,6 @@ jobs:
   build-windows:
     name: Build Windows EXE
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -23,13 +22,12 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install pyinstaller esptool pyserial requests
+        run: pip install pyinstaller esptool pyserial requests
 
       - name: Download latest firmware
         run: python flasher/fetch_firmware.py
 
-      - name: Build EXE with PyInstaller
+      - name: Build EXE
         run: |
           cd flasher
           pyinstaller ^
@@ -50,11 +48,7 @@ jobs:
             main.py
         shell: cmd
 
-      - name: List build output
-        run: dir flasher\dist\
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: FunkFlash-ESP-Windows
           path: flasher/dist/FunkFlash-ESP.exe
@@ -66,8 +60,131 @@ jobs:
         with:
           files: flasher/dist/FunkFlash-ESP.exe
 
-  # macOS and Linux builds — added once Windows is confirmed working
-  # build-macos:
-  #   ...
-  # build-linux:
-  #   ...
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyinstaller esptool pyserial requests
+
+      - name: Download latest firmware
+        run: python flasher/fetch_firmware.py
+
+      - name: Build macOS app
+        # Note: unsigned binary — users right-click → Open → Open Anyway on first run
+        run: |
+          cd flasher
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name FunkFlash-ESP \
+            --hidden-import esptool \
+            --hidden-import esptool.targets \
+            --hidden-import esptool.targets.esp32 \
+            --hidden-import esptool.loader \
+            --hidden-import esptool.cmds \
+            --hidden-import serial \
+            --hidden-import serial.tools \
+            --hidden-import serial.tools.list_ports \
+            --hidden-import serial.tools.list_ports_osx \
+            --collect-all esptool \
+            --add-data "firmware:firmware" \
+            main.py
+
+      - name: Package as DMG
+        run: |
+          brew install create-dmg || true
+          create-dmg \
+            --volname "FunkFlash-ESP" \
+            --window-size 400 200 \
+            --icon-size 100 \
+            --app-drop-link 300 100 \
+            flasher/dist/FunkFlash-ESP.dmg \
+            flasher/dist/FunkFlash-ESP.app \
+          || cp flasher/dist/FunkFlash-ESP flasher/dist/FunkFlash-ESP-macOS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FunkFlash-ESP-macOS
+          path: |
+            flasher/dist/FunkFlash-ESP.dmg
+            flasher/dist/FunkFlash-ESP-macOS
+          retention-days: 30
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            flasher/dist/FunkFlash-ESP.dmg
+            flasher/dist/FunkFlash-ESP-macOS
+
+  build-linux:
+    name: Build Linux Binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-tk
+
+      - name: Install Python dependencies
+        run: pip install pyinstaller esptool pyserial requests
+
+      - name: Download latest firmware
+        run: python flasher/fetch_firmware.py
+
+      - name: Build Linux binary
+        run: |
+          cd flasher
+          pyinstaller \
+            --onefile \
+            --name FunkFlash-ESP \
+            --hidden-import esptool \
+            --hidden-import esptool.targets \
+            --hidden-import esptool.targets.esp32 \
+            --hidden-import esptool.loader \
+            --hidden-import esptool.cmds \
+            --hidden-import serial \
+            --hidden-import serial.tools \
+            --hidden-import serial.tools.list_ports \
+            --hidden-import serial.tools.list_ports_linux \
+            --collect-all esptool \
+            --add-data "firmware:firmware" \
+            main.py
+
+      - name: Make executable + package as AppImage-style zip
+        run: |
+          chmod +x flasher/dist/FunkFlash-ESP
+          cd flasher/dist
+          zip FunkFlash-ESP-Linux.zip FunkFlash-ESP
+          echo "# FunkFlash-ESP Linux" > README.txt
+          echo "chmod +x FunkFlash-ESP && ./FunkFlash-ESP" >> README.txt
+          echo "Note: may need: sudo usermod -a -G dialout \$USER" >> README.txt
+          zip FunkFlash-ESP-Linux.zip README.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FunkFlash-ESP-Linux
+          path: flasher/dist/FunkFlash-ESP-Linux.zip
+          retention-days: 30
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: flasher/dist/FunkFlash-ESP-Linux.zip
