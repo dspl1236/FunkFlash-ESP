@@ -414,38 +414,13 @@ async function doScan(){
 }
 
 async function bleAuth(){
-  if(!gCc) return;
-
-  function buildPassword(pw){
-    // Simos Tools buildPassword() — encodes before sending
-    // cmdFlags = SETTINGS(0x80) | SET_GET(0x40) | PASSWORD(0x07) = 0xC7
-    let i=1234, out=[];
-    for(let idx=0;idx<pw.length;idx++){
-      out.push((pw.charCodeAt(idx)+i)&0xFF);
-      i+=11*idx;
-    }
-    return out;
-  }
-
-  function buildFrame(pw){
-    const enc = buildPassword(pw);
-    return new Uint8Array([0xF1, 0xC7, 0x00, 0x00, 0x00, 0x00, enc.length, 0x00, ...enc]);
-  }
-
-  // Try both default passwords — v1.03 fresh flash uses BLE123,
-  // after Simos Tools sets it the first time it becomes BLE2.
-  // We send both back-to-back; firmware accepts the matching one and ignores the other.
-  const passwords = ['BLE123', 'BLE2'];
-  try{
-    for(const pw of passwords){
-      await gCc.writeValueWithoutResponse(buildFrame(pw));
-      await new Promise(r=>setTimeout(r,200));
-    }
-    lg('BLE auth sent ✓','ok');
-  }catch(e){
-    lg('Auth note: '+e.message,'w'); // non-fatal — older firmware has no password
-  }
+  // FunkBridge firmware (our build) has no password requirement.
+  // PASSWORD_CHECK is disabled in constants.h — connect and go.
+  // Compatible with Switchleg v0.90 (no password) automatically.
+  // For Switchleg v1.03+: the firmware ignores unknown command flags gracefully.
+  lg('BLE auth \u2713 (FunkBridge — no password required)','ok');
 }
+
 
 async function doDisc(){
   if(USE_WIFI){
