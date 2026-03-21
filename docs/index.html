@@ -415,29 +415,33 @@ async function doScan(){
 
 async function bleAuth(){
   if(!gCc) return;
-  try{
-    // Simos Tools buildPassword() encodes the password before sending.
-    // cmdFlags = SETTINGS(128) | SET_GET(64) | PASSWORD(7) = 0xC7
-    // "BLE2" encoded = [0x14, 0x1E, 0x22, 0x25]
-    // "BLE123" (default when no password set) = [0x14, 0x1E, 0x22, 0x24, 0x46, 0x73]
-    // Frame: [0xF1][0xC7][rx_lo][rx_hi][tx_lo][tx_hi][len_lo][len_hi][encoded_pw...]
-    // rx=0, tx=0 for settings frames
 
-    function buildPassword(pw){
-      let i=1234, out=[];
-      for(let idx=0;idx<pw.length;idx++){
-        out.push((pw.charCodeAt(idx)+i)&0xFF);
-        i+=11*idx;
-      }
-      return out;
+  function buildPassword(pw){
+    // Simos Tools buildPassword() — encodes before sending
+    // cmdFlags = SETTINGS(0x80) | SET_GET(0x40) | PASSWORD(0x07) = 0xC7
+    let i=1234, out=[];
+    for(let idx=0;idx<pw.length;idx++){
+      out.push((pw.charCodeAt(idx)+i)&0xFF);
+      i+=11*idx;
     }
+    return out;
+  }
 
-    const storedPw = 'BLE2'; // v1.03 default — change if you set a custom password
-    const encoded  = buildPassword(storedPw);
-    const header   = [0xF1, 0xC7, 0x00, 0x00, 0x00, 0x00, encoded.length, 0x00];
-    const payload  = new Uint8Array([...header, ...encoded]);
-    await gCc.writeValueWithoutResponse(payload);
-    await new Promise(r=>setTimeout(r,400));
+  function buildFrame(pw){
+    const enc = buildPassword(pw);
+    return new Uint8Array([0xF1, 0xC7, 0x00, 0x00, 0x00, 0x00, enc.length, 0x00, ...enc]);
+  }
+
+  // Try both default passwords — v1.03 fresh flash uses BLE123,
+  // after Simos Tools sets it the first time it becomes BLE2.
+  // We send both back-to-back; firmware accepts the matching one and ignores the other.
+  const passwords = ['BLE123', 'BLE2'];
+  try{
+    for(const pw of passwords){
+      await gCc.writeValueWithoutResponse(buildFrame(pw));
+      await new Promise(r=>setTimeout(r,200));
+    }
+    lg('BLE auth sent ✓','ok');
   }catch(e){
     lg('Auth note: '+e.message,'w'); // non-fatal — older firmware has no password
   }
