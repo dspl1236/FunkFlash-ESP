@@ -298,6 +298,13 @@ function h2s(a){return a.map(b=>b.toString(16).padStart(2,'0')).join(' ').toUppe
 function h2c(a){return a.map(b=>b.toString(16).padStart(2,'0')).join('');}
 
 // ── UDS helpers ───────────────────────────────────────────────────────────
+async function tpBcast(){
+  // Functional tester present to 0x7DF — wakes all modules
+  try{
+    await send(0x7DF,0x7DF,new Uint8Array([0x3E,0x80]));
+  }catch(e){}
+}
+
 async function extSess(tx,rx){
   const r=await uds(tx,rx,[0x10,0x03]);
   if(r[0]!==0x50) throw new Error('session NRC:0x'+(r[2]||0).toString(16));
@@ -451,6 +458,36 @@ async function runIKA(){
   tab('ika');
   lg('── IKA Key Read ──','h');
 
+  // Step 1: Wake diagnostic network with functional tester present
+  // 0x7DF = UDS functional address (all modules listen)
+  lg('Waking diagnostic network (0x7DF tester present)…','d');
+  try{
+    await ensureConn();
+    await send(0x7DF,0x7DF,new Uint8Array([0x3E,0x80]));
+    await delay(100);
+  }catch(e){ lg('TesterPresent broadcast: '+e.message,'w'); }
+
+  // Step 2: Establish J533 extended session FIRST
+  // Sub-bus modules (J255, J136 etc) require J533 to be in
+  // extended session before it will route requests to them
+  const J533_TX=0x710, J533_RX=0x77A;
+  lg('Opening J533 extended session…','d');
+  try{
+    await ensureConn();
+    await extSess(J533_TX,J533_RX);
+    lg('J533 session open ✓','ok');
+  }catch(e){
+    lg('J533 session failed: '+e.message,'er');
+    lg('Cannot reach gateway — check ignition + OBD','w');
+  }
+
+  // TesterPresent keepalive — send every 2s during reads
+  let tpTimer=setInterval(async()=>{
+    try{
+      await send(J533_TX,J533_RX,new Uint8Array([0x3E,0x80]));
+    }catch(e){}
+  },2000);
+
   const res={};
   for(const m of MODS){
     document.getElementById('mc-'+m.n).className='mc ac';
@@ -474,8 +511,9 @@ async function runIKA(){
       document.getElementById('ms-'+m.n).textContent='ERROR';
       lg(m.n+': '+e.message,'er');
     }
-    await delay(500);
+    await delay(300);
   }
+  clearInterval(tpTimer);
 
   const blobs=Object.values(res).filter(v=>v);
   const uniq=new Set(blobs);
