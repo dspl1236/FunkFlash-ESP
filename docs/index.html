@@ -414,13 +414,28 @@ async function doScan(){
 }
 
 async function bleAuth(){
-  // FunkBridge firmware (our build) has no password requirement.
-  // PASSWORD_CHECK is disabled in constants.h — connect and go.
-  // Compatible with Switchleg v0.90 (no password) automatically.
-  // For Switchleg v1.03+: the firmware ignores unknown command flags gracefully.
-  lg('BLE auth \u2713 (FunkBridge — no password required)','ok');
+  // FunkBridge firmware: PASSWORD_CHECK disabled — no auth needed.
+  // Switchleg v1.03 fallback: try both encoded passwords for compatibility.
+  if(!gCc) return;
+  try{
+    function buildPw(pw){
+      let i=1234, out=[];
+      for(let idx=0;idx<pw.length;idx++){out.push((pw.charCodeAt(idx)+i)&0xFF);i+=11*idx;}
+      return out;
+    }
+    function frame(pw){
+      const e=buildPw(pw);
+      return new Uint8Array([0xF1,0xC7,0,0,0,0,e.length,0,...e]);
+    }
+    // Send Switchleg compat frames (ignored by FunkBridge, accepted by Switchleg v1.03)
+    await gCc.writeValueWithoutResponse(frame('BLE123'));
+    await new Promise(r=>setTimeout(r,150));
+    await gCc.writeValueWithoutResponse(frame('BLE2'));
+    await new Promise(r=>setTimeout(r,150));
+  }catch(e){
+    // Non-fatal — FunkBridge needs no auth, Switchleg may reject quietly
+  }
 }
-
 
 async function doDisc(){
   if(USE_WIFI){
@@ -634,7 +649,7 @@ if(USE_WIFI){
   lg('Tap CONNECT to open WebSocket to ESP32','h');
 }else{
   if(!window.isSecureContext) document.getElementById('warn').style.display='block';
-  lg('VAG-CP Tool v6 — BLE mode','ok');
+  lg('FunkBridge / VAG-CP Tool — BLE mode','ok');
   if(!navigator.bluetooth) lg('Web Bluetooth not detected — use Chrome','er');
   else lg('Tap SCAN & CONNECT to find ESP32','h');
 }
