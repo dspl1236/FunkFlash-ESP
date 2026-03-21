@@ -173,12 +173,16 @@ const WS_URL   = USE_WIFI ? 'ws://'+location.hostname+'/ws' : null;
 const KNOWN = 'e62b41d11c44af202177fb1f274b0ac2d15bd262e4fd27ab61d123c2f15a2c932600';
 
 const MODS = [
-  {n:'J533',d:'Gateway',    tx:0x710,rx:0x77A},
-  {n:'J255',d:'Climatronic',tx:0x746,rx:0x7AE},
-  {n:'J285',d:'Instruments',tx:0x720,rx:0x728},
-  {n:'J234',d:'Airbag',     tx:0x736,rx:0x73E},
-  {n:'J794',d:'MMI',        tx:0x7C0,rx:0x7C8},
-  {n:'J136',d:'Mem.Seat',   tx:0x714,rx:0x77C},
+  {n:"J533  Gateway", tx:0x710, rx:0x77A},
+  {n:"J255  Climatronic", tx:0x746, rx:0x7B0},
+  {n:"J285  Instruments", tx:0x714, rx:0x77E},
+  {n:"J234  Airbag", tx:0x715, rx:0x77F},
+  {n:"J794  MMI", tx:0x773, rx:0x7DD},
+  {n:"J136  Mem.Seat Driver", tx:0x74C, rx:0x7B6},
+  {n:"J521  Mem.Seat Pass.", tx:0x74D, rx:0x7B7},
+  {n:"J518  KESSY", tx:0x732, rx:0x79C},
+  {n:"J519  Body Elect.", tx:0x70E, rx:0x778},
+  {n:"J393  Central Comfort", tx:0x70D, rx:0x777},
 ];
 
 // ── Transport state ─────────────────────────────────────────────────────────
