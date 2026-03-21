@@ -299,10 +299,9 @@ function h2c(a){return a.map(b=>b.toString(16).padStart(2,'0')).join('');}
 
 // ── UDS helpers ───────────────────────────────────────────────────────────
 async function tpBcast(){
-  // Functional tester present to 0x7DF — wakes all modules
-  try{
-    await send(0x7DF,0x7DF,new Uint8Array([0x3E,0x80]));
-  }catch(e){}
+  // WARNING: 0x7DF causes all 15+ modules to respond simultaneously
+  // on a live VAG bus — bus collision and TWAI bus-off. Do not call.
+  // Use physical J533 address 0x710 only.
 }
 
 async function extSess(tx,rx){
@@ -458,14 +457,10 @@ async function runIKA(){
   tab('ika');
   lg('── IKA Key Read ──','h');
 
-  // Step 1: Wake diagnostic network with functional tester present
-  // 0x7DF = UDS functional address (all modules listen)
-  lg('Waking diagnostic network (0x7DF tester present)…','d');
-  try{
-    await ensureConn();
-    await send(0x7DF,0x7DF,new Uint8Array([0x3E,0x80]));
-    await delay(100);
-  }catch(e){ lg('TesterPresent broadcast: '+e.message,'w'); }
+  // Step 1: Establish J533 extended session directly at 0x710
+  // NOTE: do NOT send to 0x7DF functional broadcast — on a live VAG bus
+  // all 15+ modules respond simultaneously causing CAN bus collision
+  // and TWAI bus-off. Talk to J533 directly at 0x710.
 
   // Step 2: Establish J533 extended session FIRST
   // Sub-bus modules (J255, J136 etc) require J533 to be in
@@ -479,6 +474,13 @@ async function runIKA(){
   }catch(e){
     lg('J533 session failed: '+e.message,'er');
     lg('Cannot reach gateway — check ignition + OBD','w');
+    // No point continuing — J533 must be in session before
+    // any sub-bus module reads will work
+    clearInterval(tpTimer);
+    document.getElementById('rbanner').className='c';
+    document.getElementById('rbanner').textContent='◈ J533 SESSION FAILED — CHECK IGNITION + OBD';
+    btn.disabled=false; btn.textContent='🔑 READ ALL IKA KEYS (DID 0x00BE)';
+    return;
   }
 
   // TesterPresent keepalive — send every 2s during reads
