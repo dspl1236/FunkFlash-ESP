@@ -305,8 +305,10 @@ async function tpBcast(){
 }
 
 async function extSess(tx,rx){
-  const r=await uds(tx,rx,[0x10,0x03]);
-  if(r[0]!==0x50) throw new Error('session NRC:0x'+(r[2]||0).toString(16));
+  // 0x10 0x81 = ExtendedSession + SuppressPosResponse (VAG style — Simos Tools)
+  // Module enters session silently, no 0x50 response expected
+  await send(tx,rx,new Uint8Array([0x10,0x81]));
+  await delay(150);
 }
 
 async function rdid(tx,rx,did){
@@ -483,29 +485,22 @@ async function runIKA(){
   // Sub-bus modules (J255, J136 etc) require J533 to be in
   // extended session before it will route requests to them
   const J533_TX=0x710, J533_RX=0x77A;
-  lg('Opening J533 extended session…','d');
+  // Send 0x10 0x81 to J533 — suppress response bit set, no 0x50 expected.
+  // J533 enters extended session silently. This is how Simos Tools does it.
+  lg('Opening J533 session (0x10 81)…','d');
   try{
     await ensureConn();
-    await extSess(J533_TX,J533_RX);
-    lg('J533 session open ✓','ok');
+    await send(J533_TX,J533_RX,new Uint8Array([0x10,0x81]));
+    await delay(200);
+    lg('J533 session sent ✓','ok');
   }catch(e){
-    lg('J533 session failed: '+e.message,'er');
-    lg('Cannot reach gateway — check ignition + OBD','w');
-    // No point continuing — J533 must be in session before
-    // any sub-bus module reads will work
-    clearInterval(tpTimer);
-    document.getElementById('rbanner').className='c';
-    document.getElementById('rbanner').textContent='◈ J533 SESSION FAILED — CHECK IGNITION + OBD';
-    btn.disabled=false; btn.textContent='🔑 READ ALL IKA KEYS (DID 0x00BE)';
-    return;
+    lg('J533 session note: '+e.message,'w');
   }
 
   // TesterPresent keepalive — send every 2s during reads
   let tpTimer=setInterval(async()=>{
-    try{
-      await send(J533_TX,J533_RX,new Uint8Array([0x3E,0x80]));
-    }catch(e){}
-  },2000);
+    try{ await send(J533_TX,J533_RX,new Uint8Array([0x3E,0x80])); }catch(e){}
+  },1500);
 
   const res={};
   for(const m of MODS){
