@@ -29,7 +29,7 @@ FunkFlash-ESP flashes three firmware modes onto your ESP32 OBD bridge:
 The ESP32 advertises as `BLE_TO_ISOTP20` over Bluetooth.  
 Use with:
 - [simos-suite](https://github.com/dspl1236/simos-suite) desktop diagnostic tool
-- [VAG-CP PWA](https://dspl1236.github.io/VAG-CP-Docs/) — phone-based IKA key reader
+- [FunkBridge PWA](https://dspl1236.github.io/FunkFlash-ESP/) — phone-based IKA key reader
 
 ### WiFi AP mode — instant bench use
 The ESP32 creates a **FunkBridge** WiFi access point (no password).  
@@ -146,7 +146,7 @@ with additions:
 
 - **[simos-suite](https://github.com/dspl1236/simos-suite)** — Desktop ECU diagnostic tool (Simos8.5, C7 A6/A7)
 - **[VAG-CP-Docs](https://github.com/dspl1236/VAG-CP-Docs)** — Component Protection research documentation
-- **[VAG-CP PWA](https://dspl1236.github.io/VAG-CP-Docs/)** — Browser-based diagnostic tool (phone friendly)
+- **[FunkBridge PWA](https://dspl1236.github.io/FunkFlash-ESP/)** — Browser-based diagnostic tool (phone friendly)
 
 ---
 
