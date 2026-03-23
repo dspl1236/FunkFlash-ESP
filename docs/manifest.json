@@ -1,9 +1,9 @@
 {
   "name": "VAG-CP Tool",
   "short_name": "VAG-CP",
-  "description": "Component Protection diagnostic tool for VAG vehicles",
+  "description": "Component Protection diagnostic tool — dual-CAN ESP32 bridge",
   "start_url": "/FunkFlash-ESP/",
   "display": "standalone",
   "background_color": "#07090a",
-  "theme_color": "#0a0f0a"
+  "theme_color": "#07090a"
 }

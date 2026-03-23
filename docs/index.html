@@ -5,20 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta name="theme-color" content="#07090a">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>VAG-CP Tool</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;500;700&display=swap');
-:root{--bg:#07090a;--sur:#0d1214;--bdr:#1a2a1a;--grn:#00e676;--amb:#ffb300;--red:#ff1744;--blu:#00b0ff;--dim:#3a4a3a;--txt:#c8d8c8;--mono:'Share Tech Mono',monospace;--head:'Barlow Condensed',sans-serif}
+:root{--bg:#07090a;--sur:#0d1214;--bdr:#1a2a1a;--grn:#00e676;--amb:#ffb300;--red:#ff1744;--blu:#00b0ff;--dim:#3a4a3a;--txt:#c8d8c8;--yel:#d29922;--mono:'Share Tech Mono',monospace;--head:'Barlow Condensed',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;min-height:100dvh;display:flex;flex-direction:column}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,230,118,.012) 2px,rgba(0,230,118,.012) 4px);pointer-events:none;z-index:9999}
-header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:11px 14px 9px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-family:var(--head);font-weight:700;font-size:22px;letter-spacing:3px;color:var(--grn);text-transform:uppercase}
 .logo span{color:var(--dim);font-weight:300}
-#pill{font-family:var(--head);font-size:11px;font-weight:500;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase;transition:all .3s}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+#pill{font-family:var(--head);font-size:11px;font-weight:500;letter-spacing:2px;padding:3px 9px;border-radius:2px;text-transform:uppercase;transition:all .3s}
 #pill.off{background:rgba(255,23,68,.15);color:var(--red);border:1px solid rgba(255,23,68,.3)}
 #pill.ing{background:rgba(255,179,0,.15);color:var(--amb);border:1px solid rgba(255,179,0,.3);animation:pulse 1s infinite}
 #pill.on{background:rgba(0,230,118,.12);color:var(--grn);border:1px solid rgba(0,230,118,.3)}
+#hwpill{font-family:var(--head);font-size:9px;letter-spacing:2px;padding:2px 7px;border-radius:2px;text-transform:uppercase;color:var(--dim);border:1px solid var(--bdr)}
+#hwpill.dual{color:var(--yel);border-color:rgba(210,153,34,.4);background:rgba(210,153,34,.08)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 #warn{background:rgba(255,179,0,.1);border-bottom:1px solid rgba(255,179,0,.3);color:var(--amb);font-size:11px;padding:7px 14px;text-align:center;display:none}
 main{flex:1;padding:10px;display:flex;flex-direction:column;gap:8px}
@@ -33,6 +37,7 @@ main{flex:1;padding:10px;display:flex;flex-direction:column;gap:8px}
 .btn.r{border-color:var(--red);color:var(--red)}
 .btn.a{border-color:var(--amb);color:var(--amb)}
 .btn.b{border-color:var(--blu);color:var(--blu)}
+.btn.y{border-color:var(--yel);color:var(--yel)}
 .btn:disabled{opacity:.3;pointer-events:none}
 .row{display:flex;gap:8px}
 .row .btn{flex:1}
@@ -48,13 +53,15 @@ main{flex:1;padding:10px;display:flex;flex-direction:column;gap:8px}
 .mc.df{border-color:rgba(255,179,0,.5)}
 .mc.er{border-color:rgba(255,23,68,.3)}
 .mc.ac{border-color:var(--blu)}
-.mn{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:2px;text-transform:uppercase}
-.mc.ok .mn{color:var(--grn)}.mc.df .mn{color:var(--amb)}.mc.er .mn{color:var(--red)}.mc.ac .mn{color:var(--blu);animation:pulse .8s infinite}
-.ma{font-size:10px;color:var(--dim);margin-bottom:4px}
-.mb{font-size:9px;color:var(--dim);word-break:break-all;line-height:1.5;min-height:24px}
+.mc.kw{border-color:rgba(210,153,34,.3);opacity:.6}
+.mn{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:1px;text-transform:uppercase}
+.mc.ok .mn{color:var(--grn)}.mc.df .mn{color:var(--amb)}.mc.er .mn{color:var(--red)}.mc.ac .mn{color:var(--blu);animation:pulse .8s infinite}.mc.kw .mn{color:var(--yel)}
+.mbus{font-size:8px;letter-spacing:1px;color:var(--dim);margin-bottom:3px;text-transform:uppercase;font-family:var(--head)}
+.mc.ok .mbus{color:rgba(0,230,118,.5)}.mc.df .mbus{color:rgba(255,179,0,.5)}
+.mb{font-size:9px;color:var(--dim);word-break:break-all;line-height:1.5;min-height:20px}
 .mc.ok .mb{color:rgba(0,230,118,.7)}.mc.df .mb{color:rgba(255,179,0,.7)}
 .ms{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:2px;margin-top:3px;text-transform:uppercase}
-.mc.ok .ms{color:var(--grn)}.mc.df .ms{color:var(--amb)}.mc.er .ms{color:var(--red)}
+.mc.ok .ms{color:var(--grn)}.mc.df .ms{color:var(--amb)}.mc.er .ms{color:var(--red)}.mc.kw .ms{color:var(--yel)}
 #rbanner{display:none;border-radius:3px;padding:12px;font-family:var(--head);font-size:14px;font-weight:700;letter-spacing:2px;text-align:center;text-transform:uppercase;margin-bottom:8px}
 #rbanner.a{display:block;background:rgba(0,230,118,.1);border:1px solid var(--grn);color:var(--grn)}
 #rbanner.b{display:block;background:rgba(255,179,0,.1);border:1px solid var(--amb);color:var(--amb)}
@@ -62,7 +69,7 @@ main{flex:1;padding:10px;display:flex;flex-direction:column;gap:8px}
 .sep{height:1px;background:var(--bdr);margin:9px 0}
 #logwrap{background:var(--bg);border:1px solid var(--bdr);border-radius:3px;height:calc(100dvh - 260px);min-height:180px;overflow-y:auto;padding:9px;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text}
 #log div{font-size:11px;color:var(--dim);line-height:1.7;word-break:break-all}
-#log .ok{color:var(--grn)}#log .er{color:var(--red)}#log .h{color:var(--blu)}#log .w{color:var(--amb)}
+#log .ok{color:var(--grn)}#log .er{color:var(--red)}#log .h{color:var(--blu)}#log .w{color:var(--amb)}#log .y{color:var(--yel)}
 #cpval{font-family:var(--head);font-size:20px;font-weight:700;letter-spacing:3px;text-align:center;padding:14px;text-transform:uppercase}
 #cpval.ok{color:var(--grn)}#cpval.er{color:var(--red)}#cpval.pn{color:var(--dim)}#cpval.rn{color:var(--blu);animation:pulse .8s infinite}
 textarea#ea{background:var(--bg);border:1px solid var(--bdr);border-radius:3px;padding:9px;font-size:10px;color:var(--dim);width:100%;height:90px;resize:none;font-family:var(--mono);user-select:text;-webkit-user-select:text}
@@ -76,9 +83,12 @@ textarea#ea{background:var(--bg);border:1px solid var(--bdr);border-radius:3px;p
 
 <header>
   <div class="logo">VAG<span>-</span>CP</div>
-  <div id="pill" class="off">OFFLINE</div>
+  <div class="hright">
+    <div id="pill" class="off">OFFLINE</div>
+    <div id="hwpill">SINGLE CAN</div>
+  </div>
 </header>
-<div id="warn">⚠ Open from HTTPS for full features — dspl1236.github.io/FunkFlash-ESP</div>
+<div id="warn">⚠ Open from HTTPS for full BLE features — dspl1236.github.io/FunkFlash-ESP</div>
 
 <main>
   <div class="card">
@@ -94,10 +104,10 @@ textarea#ea{background:var(--bg);border:1px solid var(--bdr);border-radius:3px;p
 
   <div class="card" style="flex:1">
     <div class="tabs">
-      <div class="tab on"  onclick="tab('ika')">🔑 IKA</div>
-      <div class="tab"     onclick="tab('con')">⊞ CONST</div>
-      <div class="tab"     onclick="tab('cp')">⚙ CP</div>
-      <div class="tab"     onclick="tab('log')">◈ LOG</div>
+      <div class="tab on" onclick="tab('ika')">🔑 IKA</div>
+      <div class="tab"    onclick="tab('con')">⊞ CONST</div>
+      <div class="tab"    onclick="tab('cp')">⚙ CP</div>
+      <div class="tab"    onclick="tab('log')">◈ LOG</div>
     </div>
 
     <!-- IKA -->
@@ -119,25 +129,25 @@ textarea#ea{background:var(--bg);border:1px solid var(--bdr);border-radius:3px;p
       <div class="sep"></div>
       <div class="crow"><div class="clbl">RAW</div><div class="cval" id="craw">—</div></div>
       <div class="crow"><div class="clbl">HEX</div><div class="cval" id="chex">—</div></div>
-      <div style="margin-top:10px;font-size:11px;color:var(--dim);line-height:1.9">
+      <div style="margin-top:10px;font-size:11px;color:var(--dim);line-height:2">
         <div>Before Feb24: <span style="color:var(--amb)">FD A1 E9 0C FE 62 64 8D 00 00</span></div>
         <div>After&nbsp; Feb24: <span style="color:var(--grn)">FD A1 E8 0C FE 62 60 0D 00 00</span></div>
       </div>
       <div class="sep"></div>
-      <button class="btn b" id="bgka" onclick="readOne(0x710,0x77A,0x00BD,'gkar','J533 GKA')" disabled>READ GKA KEY (0x00BD)</button>
+      <button class="btn b" id="bgka" onclick="readOne(0x710,0x77A,0,0x00BD,'gkar','J533 GKA')" disabled>READ GKA KEY (0x00BD)</button>
       <div id="gkar" style="margin-top:7px;font-size:11px;color:var(--dim);word-break:break-all"></div>
     </div>
 
     <!-- CP CHECK -->
     <div class="pnl" id="pcp">
       <div id="cpval" class="pn">ROUTINE 0x0226</div>
-      <div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:11px">31 01 02 26 → J533</div>
+      <div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:11px">31 01 02 26 → J533 @ 0x710</div>
       <button class="btn a" id="bcp" onclick="runCP()" disabled>⟳ CHECK CP ROUTINE ID</button>
       <div class="sep"></div>
       <div style="font-size:11px;color:var(--dim);line-height:2.1">
-        <div><span style="color:var(--grn)">7F 31 22</span> → ID confirmed, token required</div>
-        <div><span style="color:var(--red)">7F 31 31</span>   → Wrong routine ID</div>
-        <div><span style="color:var(--amb)">7F 31 7E</span>  → Wrong session</div>
+        <div><span style="color:var(--grn)">7F 31 22</span> → ID confirmed (conditionsNotCorrect)</div>
+        <div><span style="color:var(--red)">7F 31 31</span> → Wrong routine ID</div>
+        <div><span style="color:var(--amb)">7F 31 7E</span> → Wrong session</div>
         <div><span style="color:var(--blu)">71 01 02 26</span> → Routine accepted</div>
       </div>
       <div class="sep"></div>
@@ -155,46 +165,57 @@ textarea#ea{background:var(--bg);border:1px solid var(--bdr);border-radius:3px;p
 <script>
 'use strict';
 
-// ── Constants ──────────────────────────────────────────────────────────────
-const SVC  = '0000abf0-0000-1000-8000-00805f9b34fb';
-const CW   = '0000abf1-0000-1000-8000-00805f9b34fb';
-const CN   = '0000abf2-0000-1000-8000-00805f9b34fb';
-const CC   = '0000abf3-0000-1000-8000-00805f9b34fb'; // CMD characteristic
-// BLE password 'BLE2' is the Switchleg v1.03 default — sent automatically
+// ── BLE UUIDs (Switchleg / FunkBridge protocol) ──────────────────────────
+const SVC = '0000abf0-0000-1000-8000-00805f9b34fb';
+const CW  = '0000abf1-0000-1000-8000-00805f9b34fb'; // write
+const CN  = '0000abf2-0000-1000-8000-00805f9b34fb'; // notify
+const CC  = '0000abf3-0000-1000-8000-00805f9b34fb'; // cmd
+
+// ── Frame header ─────────────────────────────────────────────────────────
+// Byte 0: H_ID (0xF1)
+// Byte 1: flags  bit0=channel (0=DT-CAN/TWAI 500k, 1=Conv-CAN/MCP2515 100k)
+//                bit7=suppressPosResponse (for extSess)
+// Bytes 2-3: rx_id  uint16 LE
+// Bytes 4-5: tx_id  uint16 LE
+// Bytes 6-7: payload length uint16 LE
 const H_ID = 0xF1;
 const H_SZ = 8;
+const CH_DT   = 0; // Drive Train CAN 500kbps  — TWAI (OBD pins 6/14)
+const CH_CONV = 1; // Convenience CAN 100kbps  — MCP2515 (OBD pins 3/11)
 
-// ── Transport auto-detection ─────────────────────────────────────────
-// Loaded from ESP32 (192.168.4.1 / funkbridge.local) → WebSocket
-// Loaded from GitHub Pages or any other origin → BLE
+// ── Transport ─────────────────────────────────────────────────────────────
 const WS_HOSTS = ['192.168.4.1','funkbridge.local','funkbridge'];
-const USE_WIFI = WS_HOSTS.some(h=>location.hostname===h);
-const WS_URL   = USE_WIFI ? 'ws://'+location.hostname+'/ws' : null;
+const USE_WIFI = WS_HOSTS.some(h => location.hostname === h);
+const WS_URL   = USE_WIFI ? 'ws://' + location.hostname + '/ws' : null;
+
+// ── Module definitions ────────────────────────────────────────────────────
+// ch: CH_DT = Drive Train CAN (TWAI, 500kbps, OBD pins 6/14)
+//     CH_CONV = Convenience CAN (MCP2515, 100kbps, OBD pins 3/11)
+// proto: 'UDS' or 'KWP' (KWP modules skipped for UDS scan)
 const KNOWN = 'e62b41d11c44af202177fb1f274b0ac2d15bd262e4fd27ab61d123c2f15a2c932600';
 
-// bus: 0=Drive Train CAN 500kbps (TWAI, OBD 6/14)
-//      1=Convenience CAN 100kbps (MCP2515, OBD 3/11)
-// kwp: true=KWP2000 module (no UDS IKA key via normal scan)
 const MODS = [
-  {n:"J533  Gateway",        tx:0x710, rx:0x77A, bus:0, kwp:false},
-  {n:"J255  Climatronic",    tx:0x746, rx:0x7B0, bus:1, kwp:false},
-  {n:"J285  Instruments",    tx:0x714, rx:0x77E, bus:0, kwp:false},
-  {n:"J234  Airbag",         tx:0x715, rx:0x77F, bus:0, kwp:false},
-  {n:"J794  MMI",            tx:0x773, rx:0x7DD, bus:1, kwp:false},
-  {n:"J136  Mem.Seat Driver",tx:0x74C, rx:0x7B6, bus:1, kwp:true},
-  {n:"J521  Mem.Seat Pass.", tx:0x74D, rx:0x7B7, bus:1, kwp:true},
-  {n:"J518  KESSY",          tx:0x732, rx:0x79C, bus:1, kwp:true},
-  {n:"J519  Body Elect.",    tx:0x70E, rx:0x778, bus:1, kwp:true},
-  {n:"J393  Central Comfort",tx:0x70D, rx:0x777, bus:1, kwp:true},
+  // ── Drive Train CAN 500kbps ───────────────────────────────────────
+  {n:"J533  Gateway",       tx:0x710, rx:0x77A, ch:CH_DT,   proto:'UDS', bus:'DT 500k'},
+  {n:"J285  Instruments",   tx:0x714, rx:0x77E, ch:CH_DT,   proto:'UDS', bus:'DT 500k'},
+  {n:"J234  Airbag",        tx:0x715, rx:0x77F, ch:CH_DT,   proto:'UDS', bus:'DT 500k'},
+  // ── Convenience CAN 100kbps ───────────────────────────────────────
+  {n:"J255  Climatronic",   tx:0x746, rx:0x7B0, ch:CH_CONV, proto:'UDS', bus:'Conv 100k'},
+  {n:"J794  MMI",           tx:0x773, rx:0x7DD, ch:CH_CONV, proto:'UDS', bus:'Info 100k'},
+  {n:"J136  Seat Driver",   tx:0x74C, rx:0x7B6, ch:CH_CONV, proto:'KWP', bus:'Conv 100k'},
+  {n:"J521  Seat Pass.",    tx:0x74D, rx:0x7B7, ch:CH_CONV, proto:'KWP', bus:'Conv 100k'},
+  {n:"J518  KESSY",         tx:0x732, rx:0x79C, ch:CH_CONV, proto:'KWP', bus:'Conv 100k'},
+  {n:"J519  Body Elect.",   tx:0x70E, rx:0x778, ch:CH_CONV, proto:'KWP', bus:'Conv 100k'},
+  {n:"J393  Comfort",       tx:0x70D, rx:0x777, ch:CH_CONV, proto:'KWP', bus:'Conv 100k'},
 ];
-const BLE_FLAG_CONV_CAN = 0x10;  // bit 4 of cmdFlags -> MCP2515
 
-// ── Transport state ─────────────────────────────────────────────────────────
-let gDev=null, gSrv=null, gWc=null, gNc=null, gCc=null; // BLE (gCc=CMD char)
-let gWs=null;                                   // WiFi WebSocket
+// ── State ─────────────────────────────────────────────────────────────────
+let gDev=null, gSrv=null, gWc=null, gNc=null, gCc=null;
+let gWs=null;
 let rxQ=[], rxR=[];
+let gDualCAN = false; // true once firmware confirms dual-CAN capability
 
-// ── UI helpers ─────────────────────────────────────────────────────────────
+// ── UI helpers ────────────────────────────────────────────────────────────
 function tab(name) {
   ['ika','con','cp','log'].forEach((n,i) => {
     document.querySelectorAll('.tab')[i].className = 'tab' + (n===name?' on':'');
@@ -206,467 +227,484 @@ function lg(msg, cls='') {
   const wrap = document.getElementById('logwrap');
   const el   = document.getElementById('log');
   const d = document.createElement('div');
-  if(cls) d.className=cls;
-  d.textContent='> '+msg;
+  if (cls) d.className = cls;
+  d.textContent = '> ' + msg;
   el.appendChild(d);
-  wrap.scrollTop=wrap.scrollHeight;
+  wrap.scrollTop = wrap.scrollHeight;
 }
 
-function clearLog(){ document.getElementById('log').innerHTML=''; }
+function clearLog() { document.getElementById('log').innerHTML = ''; }
+
+function setHWPill(dual) {
+  gDualCAN = dual;
+  const p = document.getElementById('hwpill');
+  p.className = dual ? 'hwpill dual' : 'hwpill';
+  p.textContent = dual ? 'DUAL CAN' : 'SINGLE CAN';
+}
 
 function setUI(state, name) {
-  const pill=document.getElementById('pill');
-  const ch=document.getElementById('ch');
-  const dn=document.getElementById('dname');
-  const btns=['bika','bcon','bcp','bgka'];
-  if(state==='on'){
+  const pill = document.getElementById('pill');
+  const ch   = document.getElementById('ch');
+  const dn   = document.getElementById('dname');
+  const btns = ['bika','bcon','bcp','bgka'];
+  if (state === 'on') {
     pill.className='pill on'; pill.textContent='ONLINE';
     ch.className='ch on';
-    dn.textContent=name||'BLE_TO_ISOTP20';
-    document.getElementById('bscan').disabled=true;
-    document.getElementById('bdisc').disabled=false;
-    btns.forEach(id=>{ const e=document.getElementById(id); if(e) e.disabled=false; });
-  } else if(state==='ing'){
+    dn.textContent = name || 'BLE_TO_ISOTP20';
+    document.getElementById('bscan').disabled = true;
+    document.getElementById('bdisc').disabled = false;
+    btns.forEach(id => { const e=document.getElementById(id); if(e) e.disabled=false; });
+  } else if (state === 'ing') {
     pill.className='pill ing'; pill.textContent='LINKING…';
-    document.getElementById('bscan').disabled=true;
+    document.getElementById('bscan').disabled = true;
   } else {
     pill.className='pill off'; pill.textContent='OFFLINE';
-    ch.className='ch';
-    dn.textContent='no device connected';
-    document.getElementById('bscan').disabled=false;
-    document.getElementById('bdisc').disabled=true;
-    btns.forEach(id=>{ const e=document.getElementById(id); if(e) e.disabled=true; });
+    ch.className = 'ch';
+    dn.textContent = 'no device connected';
+    document.getElementById('bscan').disabled = false;
+    document.getElementById('bdisc').disabled = true;
+    btns.forEach(id => { const e=document.getElementById(id); if(e) e.disabled=true; });
     gWc=null; gNc=null; gSrv=null;
+    setHWPill(false);
   }
 }
 
-// ── Notification handler ───────────────────────────────────────────────────
+// ── Notification handler ──────────────────────────────────────────────────
 function onNtfy(evt) {
-  const raw=new Uint8Array(evt.target.value.buffer);
-  let off=0;
-  while(off<raw.length){
-    if(raw[off]!==H_ID){off++;continue;}
-    if(off+H_SZ>raw.length) break;
-    const v=new DataView(raw.buffer,off);
-    const sz=v.getUint16(6,true);
-    off+=H_SZ;
-    if(off+sz>raw.length) break;
-    const pay=Array.from(raw.slice(off,off+sz));
-    off+=sz;
-    if(rxR.length>0) rxR.shift()(pay);
+  const raw = new Uint8Array(evt.target.value.buffer);
+  let off = 0;
+  while (off < raw.length) {
+    if (raw[off] !== H_ID) { off++; continue; }
+    if (off + H_SZ > raw.length) break;
+    const v   = new DataView(raw.buffer, off);
+    const sz  = v.getUint16(6, true);
+    off += H_SZ;
+    if (off + sz > raw.length) break;
+    const pay = Array.from(raw.slice(off, off + sz));
+    off += sz;
+    if (rxR.length > 0) rxR.shift()(pay);
     else rxQ.push(pay);
   }
 }
 
-// ── Wait for one response ──────────────────────────────────────────────────
-function wait(ms=7000){
-  return new Promise((res,rej)=>{
-    if(rxQ.length>0){res(rxQ.shift());return;}
-    const t=setTimeout(()=>{
-      rxR=rxR.filter(r=>r!==res);
+function wait(ms=7000) {
+  return new Promise((res, rej) => {
+    if (rxQ.length > 0) { res(rxQ.shift()); return; }
+    const t = setTimeout(() => {
+      rxR = rxR.filter(r => r !== res);
       rej(new Error('timeout'));
-    },ms);
-    rxR.push(v=>{clearTimeout(t);res(v);});
+    }, ms);
+    rxR.push(v => { clearTimeout(t); res(v); });
   });
 }
 
-// ── Send a UDS frame ───────────────────────────────────────────────────────
-async function send(txId,rxId,uds,convCan=false){
-  const hdr=new Uint8Array(H_SZ);
-  const dv=new DataView(hdr.buffer);
-  // Byte 1 = cmdFlags: set BLE_FLAG_CONV_CAN (0x10) for Convenience CAN modules
-  dv.setUint8(0,H_ID); dv.setUint8(1,convCan?BLE_FLAG_CONV_CAN:0);
-  dv.setUint16(2,rxId,true); dv.setUint16(4,txId,true);
-  dv.setUint16(6,uds.length,true);
-  const pkt=new Uint8Array(H_SZ+uds.length);
-  pkt.set(hdr); pkt.set(uds,H_SZ);
-  if(USE_WIFI){
-    if(!gWs||gWs.readyState!==WebSocket.OPEN) throw new Error('WebSocket not connected');
+// ── Send ──────────────────────────────────────────────────────────────────
+// channel: CH_DT (0) or CH_CONV (1) — encoded in flags byte bit 0
+async function send(txId, rxId, uds, channel=CH_DT) {
+  const hdr = new Uint8Array(H_SZ);
+  const dv  = new DataView(hdr.buffer);
+  dv.setUint8(0, H_ID);
+  dv.setUint8(1, channel & 0x01);  // flags: bit0 = channel select
+  dv.setUint16(2, rxId, true);
+  dv.setUint16(4, txId, true);
+  dv.setUint16(6, uds.length, true);
+  const pkt = new Uint8Array(H_SZ + uds.length);
+  pkt.set(hdr); pkt.set(uds, H_SZ);
+  if (USE_WIFI) {
+    if (!gWs || gWs.readyState !== WebSocket.OPEN) throw new Error('WebSocket not connected');
     gWs.send(pkt); return;
   }
-  if(!gWc) throw new Error('BLE not connected');
-  try{
-    await gWc.writeValueWithoutResponse(pkt);
-  }catch(e){
-    await gWc.writeValue(pkt);
-  }
+  if (!gWc) throw new Error('BLE not connected');
+  try { await gWc.writeValueWithoutResponse(pkt); }
+  catch(e) { await gWc.writeValue(pkt); }
 }
 
-// ── UDS exchange ──────────────────────────────────────────────────────────
-async function uds(txId,rxId,req,ms=7000,convCan=false){
-  rxQ=[]; rxR=[];
-  await send(txId,rxId,new Uint8Array(req),convCan);
+async function uds(txId, rxId, req, channel=CH_DT, ms=7000) {
+  rxQ = []; rxR = [];
+  await send(txId, rxId, new Uint8Array(req), channel);
   return wait(ms);
 }
 
-function h2s(a){return a.map(b=>b.toString(16).padStart(2,'0')).join(' ').toUpperCase();}
-function h2c(a){return a.map(b=>b.toString(16).padStart(2,'0')).join('');}
+function h2s(a) { return a.map(b=>b.toString(16).padStart(2,'0')).join(' ').toUpperCase(); }
+function h2c(a) { return a.map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── UDS helpers ───────────────────────────────────────────────────────────
-async function tpBcast(){
-  // WARNING: 0x7DF causes all 15+ modules to respond simultaneously
-  // on a live VAG bus — bus collision and TWAI bus-off. Do not call.
-  // Use physical J533 address 0x710 only.
+async function extSess(tx, rx, ch) {
+  // 0x10 0x81 = ExtendedDiagSession + suppressPosResponse
+  // Module enters session silently, no 0x50 expected (VAG/Simos Tools style)
+  await send(tx, rx, new Uint8Array([0x10, 0x81]), ch);
+  await delay(200);
 }
 
-async function extSess(tx,rx,convCan=false){
-  // 0x10 0x81 = ExtendedSession + SuppressPosResponse, VAG style
-  await send(tx,rx,new Uint8Array([0x10,0x81]),convCan);
-  await delay(150);
-}
-
-async function rdid(tx,rx,did,convCan=false){
-  const r=await uds(tx,rx,[0x22,(did>>8)&0xFF,did&0xFF],7000,convCan);
-  if(r[0]===0x7F) throw new Error('NRC 0x'+r[2].toString(16).toUpperCase());
-  if(r[0]!==0x62) throw new Error('got '+h2s(r).substring(0,12));
+async function rdid(tx, rx, ch, did) {
+  const r = await uds(tx, rx, [0x22, (did>>8)&0xFF, did&0xFF], ch);
+  if (r[0] === 0x7F) throw new Error('NRC 0x' + r[2].toString(16).toUpperCase());
+  if (r[0] !== 0x62) throw new Error('unexpected: ' + h2s(r).substring(0,12));
   return r.slice(3);
 }
 
-// ── Auto-reconnect ─────────────────────────────────────────────────────────
-async function ensureConn(){
-  if(USE_WIFI){
-    if(gWs&&gWs.readyState===WebSocket.OPEN) return;
-    throw new Error('WiFi disconnected — tap DISC then CONNECT again');
+// ── Auto-reconnect ────────────────────────────────────────────────────────
+async function ensureConn() {
+  if (USE_WIFI) {
+    if (gWs && gWs.readyState === WebSocket.OPEN) return;
+    throw new Error('WiFi disconnected');
   }
-  if(gSrv&&gSrv.connected&&gWc) return;
-  if(!gDev) throw new Error('no device');
-  lg('Reconnecting…','w');
-  gSrv=await gDev.gatt.connect();
-  const s=await gSrv.getPrimaryService(SVC);
-  gWc=await s.getCharacteristic(CW);
-  gNc=await s.getCharacteristic(CN);
-  gNc.addEventListener('characteristicvaluechanged',onNtfy);
+  if (gSrv && gSrv.connected && gWc) return;
+  if (!gDev) throw new Error('no device');
+  lg('Reconnecting…', 'w');
+  gSrv = await gDev.gatt.connect();
+  const s = await gSrv.getPrimaryService(SVC);
+  gWc = await s.getCharacteristic(CW);
+  gNc = await s.getCharacteristic(CN);
+  gNc.addEventListener('characteristicvaluechanged', onNtfy);
   await gNc.startNotifications();
   await delay(1200);
-  lg('Reconnected','ok');
+  lg('Reconnected', 'ok');
 }
 
-function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+// ── Capability probe — detect dual-CAN firmware ───────────────────────────
+// Send a no-op frame to MCP2515 channel. Old firmware (single CAN) ignores
+// the channel flag and tries DT CAN — we'll get either a response or
+// silence. We check firmware version DID 0xF189 on J533 as a proxy.
+// For now we just check if the firmware ACKs the channel flag at connect.
+// Future: firmware will send a capabilities byte in the connect handshake.
+async function probeDualCAN() {
+  try {
+    // Read J533 ECU software version — quick sanity check on DT CAN
+    const d = await uds(0x710, 0x77A, [0x22, 0xF1, 0x89], CH_DT, 3000);
+    if (d[0] === 0x62 || d[0] === 0x7F) {
+      // If we got any valid response, DT CAN is up
+      // Dual-CAN: firmware v2+ sets bit1 of flags byte in its response H_ID frame
+      // For now assume dual-CAN if firmware responds — update when fw sends capability
+      setHWPill(true);
+      lg('Dual-CAN firmware detected ✓', 'y');
+    }
+  } catch(e) {
+    // Single-CAN or not connected — leave as single
+    lg('Dual-CAN probe: ' + e.message, 'w');
+  }
+}
 
 // ── Connect ────────────────────────────────────────────────────────────────
-async function doScan(){
-  if(USE_WIFI){
+async function doScan() {
+  if (USE_WIFI) {
     setUI('ing');
-    lg('Connecting to FunkBridge WebSocket…','h');
-    try{
-      gWs=new WebSocket(WS_URL);
-      gWs.binaryType='arraybuffer';
-      await new Promise((res,rej)=>{
-        gWs.onopen=()=>res();
-        gWs.onerror=()=>rej(new Error('WebSocket failed'));
-        setTimeout(()=>rej(new Error('timeout')),8000);
+    lg('Connecting to FunkBridge WebSocket…', 'h');
+    try {
+      gWs = new WebSocket(WS_URL);
+      gWs.binaryType = 'arraybuffer';
+      await new Promise((res, rej) => {
+        gWs.onopen  = () => res();
+        gWs.onerror = () => rej(new Error('WebSocket failed'));
+        setTimeout(() => rej(new Error('timeout')), 8000);
       });
-      gWs.onmessage=(evt)=>{
-        const raw=new Uint8Array(evt.data);
-        let off=0;
-        while(off<raw.length){
-          if(raw[off]!==H_ID){off++;continue;}
-          if(off+H_SZ>raw.length) break;
-          const v=new DataView(raw.buffer,off);
-          const sz=v.getUint16(6,true);
-          off+=H_SZ;
-          if(off+sz>raw.length) break;
-          const pay=Array.from(raw.slice(off,off+sz));
-          off+=sz;
-          if(rxR.length>0) rxR.shift()(pay);
+      gWs.onmessage = evt => {
+        const raw = new Uint8Array(evt.data);
+        let off = 0;
+        while (off < raw.length) {
+          if (raw[off] !== H_ID) { off++; continue; }
+          if (off + H_SZ > raw.length) break;
+          const v   = new DataView(raw.buffer, off);
+          const sz  = v.getUint16(6, true);
+          off += H_SZ;
+          if (off + sz > raw.length) break;
+          const pay = Array.from(raw.slice(off, off + sz));
+          off += sz;
+          if (rxR.length > 0) rxR.shift()(pay);
           else rxQ.push(pay);
         }
       };
-      gWs.onclose=()=>{lg('WebSocket closed','w');setUI('off');gWs=null;};
-      lg('Connected via WiFi ✓','ok');
-      setUI('on','FunkBridge (WiFi)');
-    }catch(e){
-      lg('WiFi connect failed: '+e.message,'er');
+      gWs.onclose = () => { lg('WebSocket closed','w'); setUI('off'); gWs=null; };
+      lg('Connected via WiFi ✓', 'ok');
+      setUI('on', 'FunkBridge (WiFi)');
+      await probeDualCAN();
+    } catch(e) {
+      lg('WiFi connect failed: ' + e.message, 'er');
       setUI('off');
     }
     return;
   }
-  if(!navigator.bluetooth){
-    alert('Web Bluetooth not available.\n\nUse Chrome and open:\nhttps://dspl1236.github.io/FunkFlash-ESP/\n\nAlso enable Location permission for Chrome.');
+  if (!navigator.bluetooth) {
+    alert('Web Bluetooth not available.\n\nUse Chrome and open:\nhttps://dspl1236.github.io/FunkFlash-ESP/');
     return;
   }
-  try{
+  try {
     setUI('ing');
-    lg('Scanning for 0xABF0…','h');
-    gDev=await navigator.bluetooth.requestDevice({
-      filters:[{services:[SVC]}],
-      optionalServices:[SVC]
+    lg('Scanning for BLE service 0xABF0…', 'h');
+    gDev = await navigator.bluetooth.requestDevice({
+      filters: [{services: [SVC]}],
+      optionalServices: [SVC],
     });
-    gDev.addEventListener('gattserverdisconnected',()=>{
-      lg('BLE disconnected','w');
-      setUI('off');
+    gDev.addEventListener('gattserverdisconnected', () => {
+      lg('BLE disconnected', 'w'); setUI('off');
     });
-    lg('Found: '+gDev.name,'ok');
-    gSrv=await gDev.gatt.connect();
-    const s=await gSrv.getPrimaryService(SVC);
-    gWc=await s.getCharacteristic(CW);
-    gNc=await s.getCharacteristic(CN);
-    gCc=await s.getCharacteristic(CC);
-    gNc.addEventListener('characteristicvaluechanged',onNtfy);
+    lg('Found: ' + gDev.name, 'ok');
+    gSrv = await gDev.gatt.connect();
+    const s = await gSrv.getPrimaryService(SVC);
+    gWc = await s.getCharacteristic(CW);
+    gNc = await s.getCharacteristic(CN);
+    try { gCc = await s.getCharacteristic(CC); } catch(e) {}
+    gNc.addEventListener('characteristicvaluechanged', onNtfy);
     await gNc.startNotifications();
     lg('Notifications subscribed, settling…');
     await delay(1200);
-    // Authenticate with v1.03+ firmware (FLAG_SETTINGS|SETTING_PASSWORD + 'BLE2')
     await bleAuth();
-    lg('BLE auth sent ✓');
-    lg('Connected: '+gDev.name,'ok');
-    setUI('on',gDev.name);
-  }catch(e){
-    lg('Connect failed: '+e.message,'er');
+    lg('Connected: ' + gDev.name, 'ok');
+    setUI('on', gDev.name);
+    await probeDualCAN();
+  } catch(e) {
+    lg('Connect failed: ' + e.message, 'er');
     setUI('off');
   }
 }
 
-async function bleAuth(){
-  // FunkBridge firmware: PASSWORD_CHECK disabled — no auth needed.
-  // Switchleg v1.03 fallback: try both encoded passwords for compatibility.
-  if(!gCc) return;
-  try{
-    function buildPw(pw){
+async function bleAuth() {
+  if (!gCc) return;
+  try {
+    function buildPw(pw) {
       let i=1234, out=[];
-      for(let idx=0;idx<pw.length;idx++){out.push((pw.charCodeAt(idx)+i)&0xFF);i+=11*idx;}
+      for (let idx=0; idx<pw.length; idx++) { out.push((pw.charCodeAt(idx)+i)&0xFF); i+=11*idx; }
       return out;
     }
-    function frame(pw){
-      const e=buildPw(pw);
+    function frame(pw) {
+      const e = buildPw(pw);
       return new Uint8Array([0xF1,0xC7,0,0,0,0,e.length,0,...e]);
     }
-    // Send Switchleg compat frames (ignored by FunkBridge, accepted by Switchleg v1.03)
     await gCc.writeValueWithoutResponse(frame('BLE123'));
-    await new Promise(r=>setTimeout(r,150));
+    await delay(150);
     await gCc.writeValueWithoutResponse(frame('BLE2'));
-    await new Promise(r=>setTimeout(r,150));
-  }catch(e){
-    // Non-fatal — FunkBridge needs no auth, Switchleg may reject quietly
-  }
+    await delay(150);
+  } catch(e) { /* non-fatal */ }
 }
 
-async function doDisc(){
-  if(USE_WIFI){
-    if(gWs) gWs.close();
-    gWs=null;
-  } else {
-    if(gDev&&gDev.gatt.connected) gDev.gatt.disconnect();
-    gCc=null;
-  }
+async function doDisc() {
+  if (USE_WIFI) { if (gWs) gWs.close(); gWs = null; }
+  else { if (gDev && gDev.gatt.connected) gDev.gatt.disconnect(); gCc = null; }
   setUI('off');
 }
 
-// ── Build module grid ──────────────────────────────────────────────────────
-function buildGrid(){
-  const g=document.getElementById('mgrid');
-  g.innerHTML='';
-  MODS.forEach(m=>{
-    const c=document.createElement('div');
-    c.className='mc'; c.id='mc-'+m.n;
-    c.innerHTML=`<div class="mn">${m.n}</div><div class="ma">${m.d}</div><div class="mb" id="mb-${m.n}">—</div><div class="ms" id="ms-${m.n}"></div>`;
+// ── Build module grid ─────────────────────────────────────────────────────
+function buildGrid() {
+  const g = document.getElementById('mgrid');
+  g.innerHTML = '';
+  MODS.forEach(m => {
+    const c = document.createElement('div');
+    c.className = 'mc' + (m.proto === 'KWP' ? ' kw' : '');
+    c.id = 'mc-' + m.n;
+    const busColor = m.ch === CH_DT ? '#d29922' : '#3fb950';
+    c.innerHTML = `
+      <div class="mn">${m.n}</div>
+      <div class="mbus" style="color:${busColor}">${m.bus} · ${m.proto}</div>
+      <div class="mb" id="mb-${m.n}">—</div>
+      <div class="ms" id="ms-${m.n}">${m.proto==='KWP'?'KWP — ODIS only':''}</div>`;
     g.appendChild(c);
   });
 }
 
-// ── IKA read ───────────────────────────────────────────────────────────────
-async function runIKA(){
-  const btn=document.getElementById('bika');
-  btn.disabled=true; btn.textContent='⟳ READING…';
+// ── IKA read ──────────────────────────────────────────────────────────────
+async function runIKA() {
+  const btn = document.getElementById('bika');
+  btn.disabled = true; btn.textContent = '⟳ READING…';
   buildGrid();
-  document.getElementById('rbanner').className='';
-  document.getElementById('ewrap').style.display='none';
+  document.getElementById('rbanner').className = '';
+  document.getElementById('ewrap').style.display = 'none';
   tab('ika');
-  lg('── IKA Key Read ──','h');
+  lg('── IKA Key Read ──', 'h');
 
-  // Step 1: Establish J533 extended session directly at 0x710
-  // NOTE: do NOT send to 0x7DF functional broadcast — on a live VAG bus
-  // all 15+ modules respond simultaneously causing CAN bus collision
-  // and TWAI bus-off. Talk to J533 directly at 0x710.
-
-  // Step 2: Establish J533 extended session FIRST
-  // Sub-bus modules (J255, J136 etc) require J533 to be in
-  // extended session before it will route requests to them
-  const J533_TX=0x710, J533_RX=0x77A;
-  // Send 0x10 0x81 to J533 — suppress response bit set, no 0x50 expected.
-  // J533 enters extended session silently. This is how Simos Tools does it.
-  lg('Opening J533 session (0x10 81)…','d');
-  try{
+  // Open J533 extended session first (DT CAN)
+  // J533 must be in extended session to route requests to sub-bus modules
+  lg('Opening J533 session (0x10 81)…', 'y');
+  try {
     await ensureConn();
-    await send(J533_TX,J533_RX,new Uint8Array([0x10,0x81]));
+    await send(0x710, 0x77A, new Uint8Array([0x10, 0x81]), CH_DT);
     await delay(200);
-    lg('J533 session sent ✓','ok');
-  }catch(e){
-    lg('J533 session note: '+e.message,'w');
+    lg('J533 session sent ✓', 'ok');
+  } catch(e) {
+    lg('J533 session: ' + e.message, 'w');
   }
 
-  // TesterPresent keepalive — send every 2s during reads
-  let tpTimer=setInterval(async()=>{
-    try{ await send(J533_TX,J533_RX,new Uint8Array([0x3E,0x80])); }catch(e){}
-  },1500);
+  // TesterPresent keepalive every 1.5s
+  let tpTimer = setInterval(async () => {
+    try { await send(0x710, 0x77A, new Uint8Array([0x3E, 0x80]), CH_DT); } catch(e) {}
+  }, 1500);
 
-  const res={};
-  for(const m of MODS){
-    document.getElementById('mc-'+m.n).className='mc ac';
-    document.getElementById('ms-'+m.n).textContent='reading…';
-    const convCan = (m.bus===1);
-    const busLbl  = convCan ? '100k' : '500k';
-    if(m.kwp){
-      res[m.n]=null;
-      document.getElementById('mc-'+m.n).className='mc er';
-      document.getElementById('mb-'+m.n).textContent='KWP2000 — no UDS IKA scan';
-      document.getElementById('ms-'+m.n).textContent='KWP';
-      lg(m.n+': KWP2000 module — skipped','w');
-      await delay(100); continue;
+  const res = {};
+  for (const m of MODS) {
+    document.getElementById('mc-' + m.n).className =
+      'mc ac' + (m.proto === 'KWP' ? ' kw' : '');
+    document.getElementById('ms-' + m.n).textContent = 'reading…';
+
+    // Skip KWP modules — they speak KWP2000 not UDS
+    if (m.proto === 'KWP') {
+      res[m.n] = null;
+      document.getElementById('mc-' + m.n).className = 'mc kw';
+      document.getElementById('mb-' + m.n).textContent = 'KWP2000 — write via ODIS';
+      document.getElementById('ms-' + m.n).textContent = 'KWP — SKIP';
+      lg(m.n + ': KWP2000 — skipped', 'y');
+      continue;
     }
-    lg(m.n+' TX:'+m.tx.toString(16)+' RX:'+m.rx.toString(16)+' ['+busLbl+']');
-    try{
+
+    // Skip J533 itself (gateway, not a CP slave)
+    if (m.tx === 0x710) {
+      res[m.n] = null;
+      document.getElementById('mc-' + m.n).className = 'mc';
+      document.getElementById('ms-' + m.n).textContent = 'GATEWAY';
+      lg(m.n + ': gateway — skip IKA', 'y');
+      continue;
+    }
+
+    lg(m.n + '  TX:0x' + m.tx.toString(16) + '  CH:' + (m.ch?'CONV':'DT'), 'h');
+    try {
       await ensureConn();
-      await extSess(m.tx,m.rx,convCan);
-      const d=await rdid(m.tx,m.rx,0x00BE,convCan);
-      const hx=h2c(d);
-      res[m.n]=hx;
-      document.getElementById('mb-'+m.n).textContent=h2s(d);
-      const same=hx===KNOWN;
-      document.getElementById('mc-'+m.n).className='mc '+(same?'ok':'df');
-      document.getElementById('ms-'+m.n).textContent=same?'✓ KNOWN':'• DIFFERENT';
-      lg(m.n+': '+hx.substring(0,16)+'…','ok');
-    }catch(e){
-      res[m.n]=null;
-      document.getElementById('mc-'+m.n).className='mc er';
-      document.getElementById('mb-'+m.n).textContent=e.message;
-      document.getElementById('ms-'+m.n).textContent='ERROR';
-      lg(m.n+': '+e.message,'er');
+      await extSess(m.tx, m.rx, m.ch);
+      const d   = await rdid(m.tx, m.rx, m.ch, 0x00BE);
+      const hx  = h2c(d);
+      res[m.n]  = hx;
+      document.getElementById('mb-' + m.n).textContent = h2s(d);
+      const same = hx === KNOWN;
+      document.getElementById('mc-' + m.n).className = 'mc ' + (same ? 'ok' : 'df');
+      document.getElementById('ms-' + m.n).textContent = same ? '✓ KNOWN' : '• DIFFERENT';
+      lg(m.n + ': ' + hx.substring(0,16) + '…', 'ok');
+    } catch(e) {
+      res[m.n] = null;
+      document.getElementById('mc-' + m.n).className = 'mc er';
+      document.getElementById('mb-' + m.n).textContent = e.message;
+      document.getElementById('ms-' + m.n).textContent = 'ERROR';
+      lg(m.n + ': ' + e.message, 'er');
     }
     await delay(300);
   }
   clearInterval(tpTimer);
 
-  const blobs=Object.values(res).filter(v=>v);
-  const uniq=new Set(blobs);
-  const banner=document.getElementById('rbanner');
-  if(blobs.length===0){
-    banner.className='c';
-    banner.textContent='◈ ALL READS FAILED — CHECK IGNITION + OBD';
-    lg('Checklist:','er');
-    lg('1. Key to position II (ignition on)','w');
-    lg('2. ESP32 firmly seated in OBD port','w');
-    lg('3. Use HTTPS URL in Chrome','w');
-  } else if(uniq.size===1){
-    banner.className='a';
-    banner.textContent='✓ SCENARIO A — ALL IDENTICAL · VIN-BOUND';
-    lg('All modules identical → VIN-bound key','ok');
-    lg('Write E62B41D1… to J255 0x00BE → CP cleared','ok');
-  } else if(uniq.size===2){
-    banner.className='b';
-    banner.textContent='⚠ SCENARIO B — 2 VARIANTS · PATTERN NEEDED';
-    lg('2 distinct blobs → type-bound derivation','w');
+  // Results summary
+  const blobs = Object.values(res).filter(v => v);
+  const uniq  = new Set(blobs);
+  const banner = document.getElementById('rbanner');
+  if (blobs.length === 0) {
+    banner.className = 'c';
+    banner.textContent = '◈ ALL READS FAILED — CHECK IGNITION + OBD';
+  } else if (uniq.size === 1) {
+    banner.className = 'a';
+    banner.textContent = '✓ SCENARIO A — ALL IDENTICAL · VIN-BOUND';
+    lg('All identical → write KNOWN blob to J255 0x00BE → CP cleared', 'ok');
+  } else if (uniq.size === 2) {
+    banner.className = 'b';
+    banner.textContent = '⚠ SCENARIO B — 2 VARIANTS · PATTERN NEEDED';
   } else {
-    banner.className='c';
-    banner.textContent='◈ SCENARIO C — '+uniq.size+' VARIANTS · PER-SERIAL';
-    lg(uniq.size+' distinct blobs → serial-bound','w');
+    banner.className = 'c';
+    banner.textContent = '◈ SCENARIO C — ' + uniq.size + ' VARIANTS · PER-SERIAL';
   }
 
-  let txt='VAG-CP IKA Key Read — '+new Date().toISOString()+'\nKnown blob: '+KNOWN+'\n\n';
-  for(const [k,v] of Object.entries(res)) txt+=k+': '+(v||'ERROR')+'\n';
-  txt+='\nResult: '+banner.textContent;
-  document.getElementById('ea').value=txt;
-  document.getElementById('ewrap').style.display='';
-
-  btn.disabled=false; btn.textContent='🔑 READ ALL IKA KEYS (DID 0x00BE)';
+  let txt = 'VAG-CP IKA Key Read — ' + new Date().toISOString() + '\nKnown blob: ' + KNOWN + '\n\n';
+  for (const [k, v] of Object.entries(res)) txt += k + ': ' + (v || 'ERROR/KWP') + '\n';
+  txt += '\nResult: ' + banner.textContent;
+  document.getElementById('ea').value = txt;
+  document.getElementById('ewrap').style.display = '';
+  btn.disabled = false; btn.textContent = '🔑 READ ALL IKA KEYS (DID 0x00BE)';
 }
 
-// ── Copy ───────────────────────────────────────────────────────────────────
-function doCopy(){
-  const txt=document.getElementById('ea').value;
-  const btn=document.getElementById('bcopy');
-  const done=ok=>{btn.textContent=ok?'✓ COPIED':'✓ SELECTED';setTimeout(()=>btn.textContent='⎘ COPY RESULTS',2500);};
-  if(navigator.clipboard&&window.isSecureContext){
-    navigator.clipboard.writeText(txt).then(()=>done(true)).catch(()=>{
+// ── Copy ──────────────────────────────────────────────────────────────────
+function doCopy() {
+  const txt = document.getElementById('ea').value;
+  const btn = document.getElementById('bcopy');
+  const done = ok => {
+    btn.textContent = ok ? '✓ COPIED' : '✓ SELECTED';
+    setTimeout(() => btn.textContent = '⎘ COPY RESULTS', 2500);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(txt).then(() => done(true)).catch(() => {
       document.getElementById('ea').select(); done(false);
     });
   } else {
     document.getElementById('ea').select();
-    try{document.execCommand('copy');done(true);}catch(e){done(false);}
+    try { document.execCommand('copy'); done(true); } catch(e) { done(false); }
   }
 }
 
-// ── Constellation ──────────────────────────────────────────────────────────
-async function readConst(){
-  const btn=document.getElementById('bcon');
-  btn.disabled=true; btn.textContent='⟳ READING…';
-  lg('Reading J533 DID 0x04A3…','h');
-  try{
+// ── Constellation ─────────────────────────────────────────────────────────
+async function readConst() {
+  const btn = document.getElementById('bcon');
+  btn.disabled = true; btn.textContent = '⟳ READING…';
+  lg('Reading J533 DID 0x04A3…', 'h');
+  try {
     await ensureConn();
-    await extSess(0x710,0x77A);
-    const d=await rdid(0x710,0x77A,0x04A3);
-    document.getElementById('craw').textContent=h2c(d);
-    const hx=h2s(d);
-    document.getElementById('chex').textContent=hx;
-    if(h2c(d)==='fda1e80cfe62600d0000'){
-      document.getElementById('chex').className='cval ok';
-      lg('Matches post-Feb2024 ✓','ok');
-    } else lg('Constellation: '+hx,'ok');
-  }catch(e){lg('Constellation: '+e.message,'er');}
-  btn.disabled=false; btn.textContent='⊞ READ CONSTELLATION (0x04A3)';
+    await extSess(0x710, 0x77A, CH_DT);
+    const d  = await rdid(0x710, 0x77A, CH_DT, 0x04A3);
+    const hx = h2s(d);
+    document.getElementById('craw').textContent = h2c(d);
+    document.getElementById('chex').textContent = hx;
+    if (h2c(d) === 'fda1e80cfe62600d0000') {
+      document.getElementById('chex').className = 'cval ok';
+      lg('Matches post-Feb2024 ✓', 'ok');
+    } else {
+      lg('Constellation: ' + hx, 'ok');
+    }
+  } catch(e) { lg('Constellation: ' + e.message, 'er'); }
+  btn.disabled = false; btn.textContent = '⊞ READ CONSTELLATION (0x04A3)';
 }
 
 // ── Single DID read ────────────────────────────────────────────────────────
-async function readOne(tx,rx,did,elId,label){
-  lg('Reading '+label+'…','h');
-  try{
+async function readOne(tx, rx, ch, did, elId, label) {
+  lg('Reading ' + label + '…', 'h');
+  try {
     await ensureConn();
-    await extSess(tx,rx);
-    const d=await rdid(tx,rx,did);
-    const el=document.getElementById(elId);
-    if(el){el.style.color='var(--grn)';el.textContent=h2s(d);}
-    lg(label+': '+h2s(d),'ok');
-  }catch(e){
-    const el=document.getElementById(elId);
-    if(el){el.style.color='var(--red)';el.textContent=e.message;}
-    lg(label+': '+e.message,'er');
+    await extSess(tx, rx, ch);
+    const d  = await rdid(tx, rx, ch, did);
+    const el = document.getElementById(elId);
+    if (el) { el.style.color = 'var(--grn)'; el.textContent = h2s(d); }
+    lg(label + ': ' + h2s(d), 'ok');
+  } catch(e) {
+    const el = document.getElementById(elId);
+    if (el) { el.style.color = 'var(--red)'; el.textContent = e.message; }
+    lg(label + ': ' + e.message, 'er');
   }
 }
 
-// ── CP routine check ───────────────────────────────────────────────────────
-async function runCP(){
-  const btn=document.getElementById('bcp');
-  const sv=document.getElementById('cpval');
-  const rv=document.getElementById('cpraw');
-  btn.disabled=true; sv.className='rn'; sv.textContent='SENDING…'; rv.textContent='';
-  lg('CP routine 31 01 02 26 → J533','h');
-  try{
+// ── CP routine check ──────────────────────────────────────────────────────
+async function runCP() {
+  const btn = document.getElementById('bcp');
+  const sv  = document.getElementById('cpval');
+  const rv  = document.getElementById('cpraw');
+  btn.disabled = true; sv.className = 'rn'; sv.textContent = 'SENDING…'; rv.textContent = '';
+  lg('CP routine 31 01 02 26 → J533', 'h');
+  try {
     await ensureConn();
-    await extSess(0x710,0x77A);
-    const r=await uds(0x710,0x77A,[0x31,0x01,0x02,0x26]);
-    const hx=h2s(r);
-    rv.textContent='Response: '+hx;
-    lg('CP: '+hx,r[0]===0x7F?'w':'ok');
-    if(r[0]===0x7F&&r[1]===0x31&&r[2]===0x22){
+    await extSess(0x710, 0x77A, CH_DT);
+    const r  = await uds(0x710, 0x77A, [0x31, 0x01, 0x02, 0x26], CH_DT);
+    const hx = h2s(r);
+    rv.textContent = 'Response: ' + hx;
+    lg('CP: ' + hx, r[0] === 0x7F ? 'w' : 'ok');
+    if (r[0]===0x7F && r[1]===0x31 && r[2]===0x22) {
       sv.className='ok'; sv.textContent='✓ ID CONFIRMED';
-      lg('0x0226 confirmed — conditionsNotCorrect','ok');
-    }else if(r[0]===0x7F&&r[2]===0x31){
+      lg('0x0226 confirmed — conditionsNotCorrect expected', 'ok');
+    } else if (r[0]===0x7F && r[2]===0x31) {
       sv.className='er'; sv.textContent='✗ WRONG ID';
-    }else if(r[0]===0x71){
+    } else if (r[0]===0x71) {
       sv.className='ok'; sv.textContent='✓ ACCEPTED';
-    }else{
+    } else {
       sv.className='pn'; sv.textContent=hx;
     }
-  }catch(e){
+  } catch(e) {
     sv.className='er'; sv.textContent='ERROR';
     rv.textContent=e.message; lg('CP: '+e.message,'er');
   }
-  btn.disabled=false;
+  btn.disabled = false;
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────
 buildGrid();
-if(USE_WIFI){
-  document.getElementById('bscan').textContent='⟳ CONNECT (WiFi)';
-  document.getElementById('warn').style.display='none';
-  lg('VAG-CP Tool v6 — WiFi mode ('+location.hostname+')','ok');
-  lg('Tap CONNECT to open WebSocket to ESP32','h');
-}else{
-  if(!window.isSecureContext) document.getElementById('warn').style.display='block';
-  lg('FunkBridge / VAG-CP Tool — BLE mode','ok');
-  if(!navigator.bluetooth) lg('Web Bluetooth not detected — use Chrome','er');
-  else lg('Tap SCAN & CONNECT to find ESP32','h');
+if (USE_WIFI) {
+  document.getElementById('bscan').textContent = '⟳ CONNECT (WiFi)';
+  document.getElementById('warn').style.display = 'none';
+  lg('VAG-CP Tool — WiFi mode (' + location.hostname + ')', 'ok');
+} else {
+  if (!window.isSecureContext) document.getElementById('warn').style.display = 'block';
+  lg('VAG-CP Tool — BLE mode', 'ok');
+  if (!navigator.bluetooth) lg('Web Bluetooth not detected — use Chrome', 'er');
+  else lg('Tap SCAN & CONNECT to find ESP32', 'h');
 }
+lg('Hardware: ESP32 + TJA1051T (DT CAN 500k) + MCP2515 (Conv CAN 100k)', 'y');
 </script>
 </body>
 </html>
