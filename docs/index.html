@@ -172,18 +172,22 @@ const USE_WIFI = WS_HOSTS.some(h=>location.hostname===h);
 const WS_URL   = USE_WIFI ? 'ws://'+location.hostname+'/ws' : null;
 const KNOWN = 'e62b41d11c44af202177fb1f274b0ac2d15bd262e4fd27ab61d123c2f15a2c932600';
 
+// bus: 0=Drive Train CAN 500kbps (TWAI, OBD 6/14)
+//      1=Convenience CAN 100kbps (MCP2515, OBD 3/11)
+// kwp: true=KWP2000 module (no UDS IKA key via normal scan)
 const MODS = [
-  {n:"J533  Gateway", tx:0x710, rx:0x77A},
-  {n:"J255  Climatronic", tx:0x746, rx:0x7B0},
-  {n:"J285  Instruments", tx:0x714, rx:0x77E},
-  {n:"J234  Airbag", tx:0x715, rx:0x77F},
-  {n:"J794  MMI", tx:0x773, rx:0x7DD},
-  {n:"J136  Mem.Seat Driver", tx:0x74C, rx:0x7B6},
-  {n:"J521  Mem.Seat Pass.", tx:0x74D, rx:0x7B7},
-  {n:"J518  KESSY", tx:0x732, rx:0x79C},
-  {n:"J519  Body Elect.", tx:0x70E, rx:0x778},
-  {n:"J393  Central Comfort", tx:0x70D, rx:0x777},
+  {n:"J533  Gateway",        tx:0x710, rx:0x77A, bus:0, kwp:false},
+  {n:"J255  Climatronic",    tx:0x746, rx:0x7B0, bus:1, kwp:false},
+  {n:"J285  Instruments",    tx:0x714, rx:0x77E, bus:0, kwp:false},
+  {n:"J234  Airbag",         tx:0x715, rx:0x77F, bus:0, kwp:false},
+  {n:"J794  MMI",            tx:0x773, rx:0x7DD, bus:1, kwp:false},
+  {n:"J136  Mem.Seat Driver",tx:0x74C, rx:0x7B6, bus:1, kwp:true},
+  {n:"J521  Mem.Seat Pass.", tx:0x74D, rx:0x7B7, bus:1, kwp:true},
+  {n:"J518  KESSY",          tx:0x732, rx:0x79C, bus:1, kwp:true},
+  {n:"J519  Body Elect.",    tx:0x70E, rx:0x778, bus:1, kwp:true},
+  {n:"J393  Central Comfort",tx:0x70D, rx:0x777, bus:1, kwp:true},
 ];
+const BLE_FLAG_CONV_CAN = 0x10;  // bit 4 of cmdFlags -> MCP2515
 
 // ── Transport state ─────────────────────────────────────────────────────────
 let gDev=null, gSrv=null, gWc=null, gNc=null, gCc=null; // BLE (gCc=CMD char)
@@ -267,10 +271,11 @@ function wait(ms=7000){
 }
 
 // ── Send a UDS frame ───────────────────────────────────────────────────────
-async function send(txId,rxId,uds){
+async function send(txId,rxId,uds,convCan=false){
   const hdr=new Uint8Array(H_SZ);
   const dv=new DataView(hdr.buffer);
-  dv.setUint8(0,H_ID); dv.setUint8(1,0);
+  // Byte 1 = cmdFlags: set BLE_FLAG_CONV_CAN (0x10) for Convenience CAN modules
+  dv.setUint8(0,H_ID); dv.setUint8(1,convCan?BLE_FLAG_CONV_CAN:0);
   dv.setUint16(2,rxId,true); dv.setUint16(4,txId,true);
   dv.setUint16(6,uds.length,true);
   const pkt=new Uint8Array(H_SZ+uds.length);
@@ -288,9 +293,9 @@ async function send(txId,rxId,uds){
 }
 
 // ── UDS exchange ──────────────────────────────────────────────────────────
-async function uds(txId,rxId,req,ms=7000){
+async function uds(txId,rxId,req,ms=7000,convCan=false){
   rxQ=[]; rxR=[];
-  await send(txId,rxId,new Uint8Array(req));
+  await send(txId,rxId,new Uint8Array(req),convCan);
   return wait(ms);
 }
 
@@ -304,15 +309,14 @@ async function tpBcast(){
   // Use physical J533 address 0x710 only.
 }
 
-async function extSess(tx,rx){
-  // 0x10 0x81 = ExtendedSession + SuppressPosResponse (VAG style — Simos Tools)
-  // Module enters session silently, no 0x50 response expected
-  await send(tx,rx,new Uint8Array([0x10,0x81]));
+async function extSess(tx,rx,convCan=false){
+  // 0x10 0x81 = ExtendedSession + SuppressPosResponse, VAG style
+  await send(tx,rx,new Uint8Array([0x10,0x81]),convCan);
   await delay(150);
 }
 
-async function rdid(tx,rx,did){
-  const r=await uds(tx,rx,[0x22,(did>>8)&0xFF,did&0xFF]);
+async function rdid(tx,rx,did,convCan=false){
+  const r=await uds(tx,rx,[0x22,(did>>8)&0xFF,did&0xFF],7000,convCan);
   if(r[0]===0x7F) throw new Error('NRC 0x'+r[2].toString(16).toUpperCase());
   if(r[0]!==0x62) throw new Error('got '+h2s(r).substring(0,12));
   return r.slice(3);
@@ -500,11 +504,21 @@ async function runIKA(){
   for(const m of MODS){
     document.getElementById('mc-'+m.n).className='mc ac';
     document.getElementById('ms-'+m.n).textContent='reading…';
-    lg(m.n+' TX:'+m.tx.toString(16)+' RX:'+m.rx.toString(16));
+    const convCan = (m.bus===1);
+    const busLbl  = convCan ? '100k' : '500k';
+    if(m.kwp){
+      res[m.n]=null;
+      document.getElementById('mc-'+m.n).className='mc er';
+      document.getElementById('mb-'+m.n).textContent='KWP2000 — no UDS IKA scan';
+      document.getElementById('ms-'+m.n).textContent='KWP';
+      lg(m.n+': KWP2000 module — skipped','w');
+      await delay(100); continue;
+    }
+    lg(m.n+' TX:'+m.tx.toString(16)+' RX:'+m.rx.toString(16)+' ['+busLbl+']');
     try{
       await ensureConn();
-      await extSess(m.tx,m.rx);
-      const d=await rdid(m.tx,m.rx,0x00BE);
+      await extSess(m.tx,m.rx,convCan);
+      const d=await rdid(m.tx,m.rx,0x00BE,convCan);
       const hx=h2c(d);
       res[m.n]=hx;
       document.getElementById('mb-'+m.n).textContent=h2s(d);
