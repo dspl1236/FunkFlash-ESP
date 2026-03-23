@@ -369,20 +369,22 @@ async function ensureConn() {
 // silence. We check firmware version DID 0xF189 on J533 as a proxy.
 // For now we just check if the firmware ACKs the channel flag at connect.
 // Future: firmware will send a capabilities byte in the connect handshake.
+let gProbed = false;
+
 async function probeDualCAN() {
+  if (gProbed) return;
+  gProbed = true;
+  // Called before first scan — car must be connected at this point
+  // Probes J533 to confirm DT CAN is alive and detect firmware capability
   try {
-    // Read J533 ECU software version — quick sanity check on DT CAN
     const d = await uds(0x710, 0x77A, [0x22, 0xF1, 0x89], CH_DT, 3000);
     if (d[0] === 0x62 || d[0] === 0x7F) {
-      // If we got any valid response, DT CAN is up
-      // Dual-CAN: firmware v2+ sets bit1 of flags byte in its response H_ID frame
-      // For now assume dual-CAN if firmware responds — update when fw sends capability
       setHWPill(true);
-      lg('Dual-CAN firmware detected ✓', 'y');
+      lg('DT CAN alive — dual-CAN firmware detected ✓', 'y');
     }
   } catch(e) {
-    // Single-CAN or not connected — leave as single
-    lg('Dual-CAN probe: ' + e.message, 'w');
+    lg('DT CAN probe: ' + e.message + ' — is OBD cable plugged in?', 'w');
+    gProbed = false; // allow retry next scan
   }
 }
 
@@ -418,7 +420,7 @@ async function doScan() {
       gWs.onclose = () => { lg('WebSocket closed','w'); setUI('off'); gWs=null; };
       lg('Connected via WiFi ✓', 'ok');
       setUI('on', 'FunkBridge (WiFi)');
-      await probeDualCAN();
+      lg('Tap any scan button to begin — plug into OBD port first', 'y');
     } catch(e) {
       lg('WiFi connect failed: ' + e.message, 'er');
       setUI('off');
@@ -452,7 +454,9 @@ async function doScan() {
     await bleAuth();
     lg('Connected: ' + gDev.name, 'ok');
     setUI('on', gDev.name);
-    await probeDualCAN();
+    // Dual-CAN probe is now manual — auto-probe fires CAN TX which causes
+    // bus-off/watchdog reset on bench with no CAN bus connected.
+    lg('Tap any scan button to begin — plug into OBD port first', 'y');
   } catch(e) {
     lg('Connect failed: ' + e.message, 'er');
     setUI('off');
@@ -510,6 +514,7 @@ async function runIKA() {
   document.getElementById('rbanner').className = '';
   document.getElementById('ewrap').style.display = 'none';
   tab('ika');
+  await probeDualCAN();
   lg('── IKA Key Read ──', 'h');
 
   // Open J533 extended session first (DT CAN)
@@ -626,6 +631,7 @@ function doCopy() {
 async function readConst() {
   const btn = document.getElementById('bcon');
   btn.disabled = true; btn.textContent = '⟳ READING…';
+  await probeDualCAN();
   lg('Reading J533 DID 0x04A3…', 'h');
   try {
     await ensureConn();
@@ -667,6 +673,7 @@ async function runCP() {
   const sv  = document.getElementById('cpval');
   const rv  = document.getElementById('cpraw');
   btn.disabled = true; sv.className = 'rn'; sv.textContent = 'SENDING…'; rv.textContent = '';
+  await probeDualCAN();
   lg('CP routine 31 01 02 26 → J533', 'h');
   try {
     await ensureConn();
