@@ -370,22 +370,28 @@ async function ensureConn() {
 // For now we just check if the firmware ACKs the channel flag at connect.
 // Future: firmware will send a capabilities byte in the connect handshake.
 let gProbed = false;
+let gBusAlive = false;
 
 async function probeDualCAN() {
-  if (gProbed) return;
+  // Returns true if CAN bus is alive, false if not.
+  // Callers must check the return value and abort if false.
+  if (gProbed && gBusAlive) return true;
   gProbed = true;
-  // Called before first scan — car must be connected at this point
-  // Probes J533 to confirm DT CAN is alive and detect firmware capability
   try {
     const d = await uds(0x710, 0x77A, [0x22, 0xF1, 0x89], CH_DT, 3000);
     if (d[0] === 0x62 || d[0] === 0x7F) {
       setHWPill(true);
-      lg('DT CAN alive — dual-CAN firmware detected ✓', 'y');
+      gBusAlive = true;
+      lg('DT CAN alive ✓', 'y');
+      return true;
     }
   } catch(e) {
-    lg('DT CAN probe: ' + e.message + ' — is OBD cable plugged in?', 'w');
-    gProbed = false; // allow retry next scan
+    gProbed = false;  // allow retry
+    gBusAlive = false;
+    lg('No CAN bus response — plug OBD cable into car first, ignition ON', 'er');
+    return false;
   }
+  return false;
 }
 
 // ── Connect ────────────────────────────────────────────────────────────────
@@ -514,7 +520,10 @@ async function runIKA() {
   document.getElementById('rbanner').className = '';
   document.getElementById('ewrap').style.display = 'none';
   tab('ika');
-  await probeDualCAN();
+  if (!await probeDualCAN()) {
+    btn.disabled = false; btn.textContent = '🔑 READ ALL IKA KEYS (DID 0x00BE)';
+    return;
+  }
   lg('── IKA Key Read ──', 'h');
 
   // Open J533 extended session first (DT CAN)
@@ -631,7 +640,7 @@ function doCopy() {
 async function readConst() {
   const btn = document.getElementById('bcon');
   btn.disabled = true; btn.textContent = '⟳ READING…';
-  await probeDualCAN();
+  if (!await probeDualCAN()) { btn.disabled=false; btn.textContent='⊞ READ CONSTELLATION (0x04A3)'; return; }
   lg('Reading J533 DID 0x04A3…', 'h');
   try {
     await ensureConn();
@@ -673,7 +682,7 @@ async function runCP() {
   const sv  = document.getElementById('cpval');
   const rv  = document.getElementById('cpraw');
   btn.disabled = true; sv.className = 'rn'; sv.textContent = 'SENDING…'; rv.textContent = '';
-  await probeDualCAN();
+  if (!await probeDualCAN()) { btn.disabled=false; sv.className='pn'; sv.textContent='ROUTINE 0x0226'; return; }
   lg('CP routine 31 01 02 26 → J533', 'h');
   try {
     await ensureConn();
