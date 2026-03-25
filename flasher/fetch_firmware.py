@@ -33,16 +33,36 @@ rel = r.json()
 print(f"Latest release: {rel.get('tag_name', '?')}")
 assets = {a["name"]: a["browser_download_url"] for a in rel.get("assets", [])}
 
+import hashlib
+
+checksums = {}
 for name in WANTED:
     if name in assets:
+        url = assets[name]
+        # Validate download URL points to GitHub
+        if not (url.startswith("https://github.com/") or
+                url.startswith("https://objects.githubusercontent.com/")):
+            print(f"  {name}: SKIPPED — untrusted download URL: {url}")
+            continue
         print(f"  Downloading {name}...")
-        data = requests.get(assets[name], timeout=60).content
+        resp = requests.get(url, timeout=60)
+        resp.raise_for_status()
+        data = resp.content
+        # Validate bootloader magic byte
+        if name == "bootloader.bin" and len(data) > 0 and data[0] != 0xE9:
+            print(f"  WARNING: {name} missing ESP32 magic byte (0xE9) — may be corrupt")
         (OUT_DIR / name).write_bytes(data)
-        print(f"  {name}: {len(data):,} bytes")
+        sha = hashlib.sha256(data).hexdigest()
+        checksums[name] = sha
+        print(f"  {name}: {len(data):,} bytes  SHA256: {sha[:16]}...")
     else:
         print(f"  {name}: not in release (placeholder)")
         p = OUT_DIR / name
         if not p.exists():
             p.write_bytes(b"PLACEHOLDER")
 
+# Write checksums file for flasher verification
+import json
+(OUT_DIR / "checksums.json").write_text(json.dumps(checksums, indent=2))
+print(f"Wrote checksums.json ({len(checksums)} files)")
 print("Done.")

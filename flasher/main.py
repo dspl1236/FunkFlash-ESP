@@ -270,6 +270,19 @@ class FunkFlashApp(tk.Tk):
             self._log_msg("Download a release or run fetch_firmware.py", "warn")
             return
 
+        # Verify firmware integrity against checksums if available
+        checksums_file = FIRMWARE_DIR / "checksums.json"
+        if checksums_file.exists():
+            import json, hashlib
+            expected = json.loads(checksums_file.read_text())
+            for _, fname in all_bins:
+                if fname in expected:
+                    actual = hashlib.sha256((FIRMWARE_DIR / fname).read_bytes()).hexdigest()
+                    if actual != expected[fname]:
+                        self._log_msg(f"CHECKSUM MISMATCH: {fname}", "err")
+                        self._log_msg("Re-download firmware or run fetch_firmware.py", "err")
+                        return
+
         if mode == "WiFi STA" and not self._ssid_var.get().strip():
             self._log_msg("WiFi Station requires an SSID", "err"); return
 
@@ -320,6 +333,9 @@ class FunkFlashApp(tk.Tk):
                     self.after(0, self._log_msg, f"NVS gen note: {e}", "warn")
                 finally:
                     os.unlink(nvs_csv.name)
+                    # Clean up NVS bin (contains plaintext credentials)
+                    if os.path.exists(nvs_bin):
+                        os.unlink(nvs_bin)
 
         class ProgressCapture:
             def __init__(self, app, total):
@@ -354,7 +370,7 @@ class FunkFlashApp(tk.Tk):
                 self.after(0, self._log_msg, "SPIFFS web app ready", "ok")
             if mode == "WiFi AP":
                 self.after(0, self._log_msg,
-                           "Connect to \'FunkBridge\' WiFi → browser auto-opens", "ok")
+                           "Connect to 'FunkBridge' WiFi (password: FunkBridge1) → browser auto-opens", "ok")
             elif mode == "WiFi STA":
                 self.after(0, self._log_msg,
                            "Join your WiFi → open http://funkbridge.local", "ok")
