@@ -95,7 +95,7 @@ jobs:
             flasher/dist/FunkFlash-ESP
             flasher/dist/FunkFlash-ESP-Linux.zip
           if-no-files-found: ignore
-          retention-days: 30
+          retention-days: 7
 
       - name: Attach to release
         if: github.event_name == 'release'
