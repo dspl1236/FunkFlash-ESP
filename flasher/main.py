@@ -294,8 +294,8 @@ class FunkFlashApp(tk.Tk):
             self.after(0, self._progress.set, 100)
             self.after(0, self._set_status, f"✓ Flashed {mode} successfully!", "green")
             self.after(0, self._log_msg, "Flash complete!", "ok")
-                            self.after(0, self._log_msg,
-                           "BLE ready — scan for BLE_TO_ISOTP20 in simos-suite", "ok")
+            self.after(0, self._log_msg,
+                       "BLE ready — scan for BLE_TO_ISOTP20 in simos-suite", "ok")
         except SystemExit as e:
             if e.code == 0:
                 self.after(0, self._progress.set, 100)
