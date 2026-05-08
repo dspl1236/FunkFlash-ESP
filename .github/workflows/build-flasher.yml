@@ -10,21 +10,8 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            artifact: FunkFlash-ESP.exe
-            pyargs: ""
-          - os: macos-latest
-            artifact: FunkFlash-ESP
-            pyargs: ""
-          - os: ubuntu-latest
-            artifact: FunkFlash-ESP
-            pyargs: ""
-
+    name: Build Windows
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -32,18 +19,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: System deps (Linux only)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update -qq && sudo apt-get install -y python3-tk
-
       - name: Install Python deps
         run: pip install -r flasher/requirements.txt pyinstaller
 
       - name: Download latest firmware
         run: python flasher/fetch_firmware.py
 
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
+      - name: Build exe
         shell: cmd
         run: |
           cd flasher
@@ -62,46 +44,14 @@ jobs:
             --add-data "firmware;firmware" ^
             main.py
 
-      - name: Build (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd flasher
-          pyinstaller \
-            --onefile --windowed --name FunkFlash-ESP \
-            --hidden-import esptool \
-            --hidden-import esptool.targets \
-            --hidden-import esptool.targets.esp32 \
-            --hidden-import esptool.loader \
-            --hidden-import esptool.cmds \
-            --hidden-import serial \
-            --hidden-import serial.tools \
-            --hidden-import serial.tools.list_ports \
-            --collect-all esptool \
-            --add-data "firmware:firmware" \
-            main.py
-
-      - name: Package Linux zip
-        if: runner.os == 'Linux'
-        run: |
-          chmod +x flasher/dist/FunkFlash-ESP
-          cd flasher/dist
-          zip FunkFlash-ESP-Linux.zip FunkFlash-ESP
-
       - uses: actions/upload-artifact@v4
         with:
-          name: FunkFlash-ESP-${{ runner.os }}
-          path: |
-            flasher/dist/FunkFlash-ESP.exe
-            flasher/dist/FunkFlash-ESP
-            flasher/dist/FunkFlash-ESP-Linux.zip
-          if-no-files-found: ignore
+          name: FunkFlash-ESP-Windows
+          path: flasher/dist/FunkFlash-ESP.exe
           retention-days: 7
 
       - name: Attach to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            flasher/dist/FunkFlash-ESP.exe
-            flasher/dist/FunkFlash-ESP
-            flasher/dist/FunkFlash-ESP-Linux.zip
+          files: flasher/dist/FunkFlash-ESP.exe
