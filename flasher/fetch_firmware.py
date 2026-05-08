@@ -14,10 +14,7 @@ WANTED = [
     "bootloader.bin",
     "partition-table.bin",
     "funkbridge-ble.bin",          # BLE bridge firmware
-    "funkbridge-ap.bin",           # WiFi AP firmware
-    "funkbridge-sta.bin",          # WiFi STA firmware
-    "funkbridge-spiffs.bin",       # Web app SPIFFS image (WiFi modes)
-]
+            ]
 
 print(f"Fetching latest release from {REPO}...")
 r = requests.get(API, timeout=30)

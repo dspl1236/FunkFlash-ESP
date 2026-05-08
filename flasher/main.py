@@ -5,8 +5,6 @@ Hardware: Regular ESP32 (38-pin DevKit) + TJA1051T + MCP2515 CAN module
 
 Flashes esp32-isotp-ble-bridge-c7vag firmware variants:
   BLE      — Bluetooth LE bridge to simos-suite / VAG-CP PWA
-  WiFi AP  — Captive portal, access at 192.168.4.1
-  WiFi STA — Joins existing network, access at funkbridge.local
 """
 import sys
 import os
@@ -36,28 +34,6 @@ FLASH_TARGETS = {
         ],
         "spiffs": None,
     },
-    "WiFi AP": {
-        "label": "WiFi AP (instant bench — no router needed)",
-        "desc":  "Creates \'FunkBridge\' WiFi hotspot. Connect phone/laptop to it, "
-                 "browser opens VAG-CP Tool automatically at 192.168.4.1.",
-        "bins":  [
-            (0x1000,  "bootloader.bin"),
-            (0x8000,  "partition-table.bin"),
-            (0x10000, "funkbridge-ap.bin"),
-        ],
-        "spiffs": (0xD0000, "funkbridge-spiffs.bin"),
-    },
-    "WiFi STA": {
-        "label": "WiFi Station (join your network)",
-        "desc":  "Joins your home/shop WiFi. Access VAG-CP Tool from any device at "
-                 "http://funkbridge.local — falls back to AP if network unavailable.",
-        "bins":  [
-            (0x1000,  "bootloader.bin"),
-            (0x8000,  "partition-table.bin"),
-            (0x10000, "funkbridge-sta.bin"),
-        ],
-        "spiffs": (0xD0000, "funkbridge-spiffs.bin"),
-    },
 }
 
 PAL = {
@@ -83,8 +59,6 @@ class FunkFlashApp(tk.Tk):
 
         self._mode_var = tk.StringVar(value="BLE")
         self._port_var = tk.StringVar(value="")
-        self._ssid_var = tk.StringVar()
-        self._pass_var = tk.StringVar()
         self._progress = tk.DoubleVar(value=0)
         self._status   = tk.StringVar(value="Ready — plug in ESP32 via USB")
 
@@ -144,20 +118,6 @@ class FunkFlashApp(tk.Tk):
                                    wraplength=500, justify="left")
         self._desc_lbl.pack(anchor="w", pady=(4,0))
 
-        # WiFi STA credentials
-        self._sta_frame = tk.Frame(body, bg=PAL["bg"])
-        for row_idx, (lbl, var, show) in enumerate([
-            ("SSID",     self._ssid_var, ""),
-            ("Password", self._pass_var, "•"),
-        ]):
-            tk.Label(self._sta_frame, text=lbl, bg=PAL["bg"], fg=PAL["dim"],
-                     font=mono, width=10, anchor="w").grid(
-                     row=row_idx, column=0, sticky="w", pady=2)
-            tk.Entry(self._sta_frame, textvariable=var, font=mono,
-                     bg=PAL["surface"], fg=PAL["text"],
-                     insertbackground=PAL["green"],
-                     relief="flat", width=34, show=show).grid(
-                     row=row_idx, column=1, sticky="ew")
 
         # Progress
         self._section(body, "PROGRESS")
@@ -238,10 +198,6 @@ class FunkFlashApp(tk.Tk):
     def _on_mode_change(self):
         mode = self._mode_var.get()
         self._desc_lbl.config(text=FLASH_TARGETS[mode]["desc"])
-        if mode == "WiFi STA":
-            self._sta_frame.pack(fill="x", pady=(4,0))
-        else:
-            self._sta_frame.pack_forget()
 
     def _log_msg(self, msg, tag=""):
         self._log.config(state="normal")
@@ -283,8 +239,6 @@ class FunkFlashApp(tk.Tk):
                         self._log_msg("Re-download firmware or run fetch_firmware.py", "err")
                         return
 
-        if mode == "WiFi STA" and not self._ssid_var.get().strip():
-            self._log_msg("WiFi Station requires an SSID", "err"); return
 
         self._flash_btn.config(state="disabled")
         self._progress.set(0)
@@ -310,32 +264,6 @@ class FunkFlashApp(tk.Tk):
         for addr, fname in targets:
             args += [str(hex(addr)), str(FIRMWARE_DIR / fname)]
 
-        # Write WiFi credentials via NVS for STA mode
-        if mode == "WiFi STA":
-            ssid = self._ssid_var.get().strip()
-            pwd  = self._pass_var.get().strip()
-            if ssid:
-                self.after(0, self._log_msg, f"WiFi: SSID={ssid}")
-                import tempfile, os
-                nvs_csv = tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False)
-                nvs_csv.write("key,type,encoding,value\n")
-                nvs_csv.write("wifi_mode,data,u8,2\n")
-                nvs_csv.write(f"wifi_ssid,data,string,{ssid}\n")
-                nvs_csv.write(f"wifi_pass,data,string,{pwd}\n")
-                nvs_csv.close()
-                nvs_bin = nvs_csv.name.replace(".csv", ".bin")
-                try:
-                    import nvs_flash_gen
-                    nvs_flash_gen.main(["generate", nvs_csv.name, nvs_bin, "0x6000"])
-                    args += [str(hex(0x9000)), nvs_bin]
-                    self.after(0, self._log_msg, "NVS credentials prepared", "ok")
-                except Exception as e:
-                    self.after(0, self._log_msg, f"NVS gen note: {e}", "warn")
-                finally:
-                    os.unlink(nvs_csv.name)
-                    # Clean up NVS bin (contains plaintext credentials)
-                    if os.path.exists(nvs_bin):
-                        os.unlink(nvs_bin)
 
         class ProgressCapture:
             def __init__(self, app, total):
@@ -366,16 +294,7 @@ class FunkFlashApp(tk.Tk):
             self.after(0, self._progress.set, 100)
             self.after(0, self._set_status, f"✓ Flashed {mode} successfully!", "green")
             self.after(0, self._log_msg, "Flash complete!", "ok")
-            if mode in ("WiFi AP", "WiFi STA"):
-                self.after(0, self._log_msg, "SPIFFS web app ready", "ok")
-            if mode == "WiFi AP":
-                self.after(0, self._log_msg,
-                           "Connect to 'FunkBridge' WiFi (password: FunkBridge1) → browser auto-opens", "ok")
-            elif mode == "WiFi STA":
-                self.after(0, self._log_msg,
-                           "Join your WiFi → open http://funkbridge.local", "ok")
-            else:
-                self.after(0, self._log_msg,
+                            self.after(0, self._log_msg,
                            "BLE ready — scan for BLE_TO_ISOTP20 in simos-suite", "ok")
         except SystemExit as e:
             if e.code == 0:
