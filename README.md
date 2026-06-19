@@ -1,3 +1,9 @@
+> # ⚠️ Archived — superseded
+> This repository is **archived and read-only**. It has been superseded by **[CerberusCAN](https://github.com/dspl1236/CerberusCAN)** — this was the firmware flasher for the esp32-isotp-ble-bridge, which is itself retired in favor of Cerberus.
+> Kept for historical reference; no further updates.
+
+---
+
 # FunkFlash-ESP
 
 **Cross-platform firmware flasher for the [esp32-isotp-ble-bridge-c7vag](https://github.com/dspl1236/esp32-isotp-ble-bridge-c7vag) ESP32 ISO-TP CAN bridge.**
